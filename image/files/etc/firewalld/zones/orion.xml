@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Orion OS — strict default firewalld zone (M2, P#2.4)
+
+  Plan section 5.1 names "firewalld strict" as part of the security
+  baseline. This zone is what we mean by "strict": deny by default,
+  permit only the bare minimum a desktop needs to function.
+
+  Allowed services explained:
+    - dhcpv6-client : required to obtain an IPv6 address on most
+                      home/ISP networks.
+    - mdns          : KDE Connect, network printer/scanner discovery,
+                      Chromecast — without mDNS the desktop loses
+                      half its peripherals.
+    - ssh           : intentionally allowed for the developer/power
+                      user. Distributions like Fedora ship this
+                      enabled; we keep parity. Users who do not want
+                      sshd exposed disable the service rather than
+                      drop the rule.
+
+  Notably NOT allowed (denied by default):
+    - cockpit, samba, samba-client, http(s), ipp-client, etc.
+      Users who need them open them via firewall-cmd, which is the
+      kind of explicit consent we want.
+
+  ICMP block: we drop incoming "echo-request" so this host does not
+  advertise its presence on hostile networks (cafes, conferences).
+  Outbound ping still works.
+
+  This zone is also the foundation the Air-Gapped AI mode (plan
+  §5.4) builds on: orion-aid will install an additional rule set
+  that drops all egress for its own UID. Keep this zone tight so
+  the air-gap rules have a sane starting point.
+
+  Activation: a separate post-install or systemd drop-in flips the
+  default zone to "orion" via firewall-cmd --set-default-zone=orion.
+-->
+<zone>
+  <short>Orion strict</short>
+  <description>
+    Default Orion OS zone. Deny inbound by default. Allow only the
+    services a typical desktop needs (DHCPv6, mDNS, SSH). Drop
+    inbound ICMP echo-request so this host does not advertise
+    itself on hostile networks.
+  </description>
+
+  <service name="dhcpv6-client"/>
+  <service name="mdns"/>
+  <service name="ssh"/>
+
+  <icmp-block name="echo-request"/>
+</zone>
