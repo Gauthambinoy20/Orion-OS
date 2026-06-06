@@ -48,15 +48,9 @@ modules:
       # for custom partitioning
       - partitionmanager
 
-    # ---- Packages we explicitly do NOT want by default ----
-    # Either redundant with our AI-first defaults, or known to confuse new
-    # users. Each removal is a deliberate product decision; if you want one
-    # back, open a PR with rationale.
-    remove:
-      - kmail              # we ship a different default mail story in M8
-      - akregator          # superseded by AI feed reader (M9)
-      - korganizer         # superseded by AI calendar agent (M6)
-      - kontact            # umbrella for the above three
-      - kmahjongg          # default-game removals: keep the desktop focused
-      - kpat
-      - kmines
+    # No `remove:` list here on purpose. rpm-ostree errors out if asked to
+    # remove a package that isn't installed, and the streamlined Aurora DX
+    # base does not ship the KDE PIM suite (kmail/kontact/korganizer/
+    # akregator) or the bundled games (kmahjongg/kpat/kmines) — so there is
+    # nothing to remove. If a future Aurora base does start shipping one of
+    # these, add it back here individually after confirming it is present.
