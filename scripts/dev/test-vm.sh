@@ -69,6 +69,10 @@ SUDO=""
 
 if [[ ! -f "${DISK_PATH}" ]] || [[ -n "${ORION_VM_REBUILD:-}" ]]; then
     echo "==> Building qcow2 from ${IMAGE} (this can take a few minutes)"
+    # bootc-image-builder runs rootful and inspects the image from the
+    # root container store, so the image must live there. Pull it into the
+    # root store first (a rootless pull elsewhere is invisible to it).
+    ${SUDO} podman image exists "${IMAGE}" || ${SUDO} podman pull "${IMAGE}"
     ${SUDO} podman run --rm \
         --privileged \
         --pull=newer \

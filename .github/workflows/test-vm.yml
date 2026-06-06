@@ -94,7 +94,10 @@ jobs:
           echo "Smoke-testing ${REF}"
 
       - name: Pull image
-        run: podman pull "${{ steps.image.outputs.ref }}"
+        # Rootful: bootc-image-builder runs as root and reads the root
+        # container store, so the image must be pulled there (the script
+        # also guards this, but pulling here surfaces a bad ref early).
+        run: sudo podman pull "${{ steps.image.outputs.ref }}"
 
       - name: Boot VM and run smoke tests
         env:
