@@ -1,0 +1,58 @@
+# Orion OS — .editorconfig
+# https://editorconfig.org
+#
+# Project-wide editor defaults. The CI linters (rustfmt, qmllint, shellcheck,
+# yamllint, markdownlint) are the ground truth; this file just helps editors
+# do the right thing on first save.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# ---- Rust ----
+[*.rs]
+indent_size = 4
+max_line_length = 100
+
+# ---- QML / JavaScript / TypeScript ----
+[*.{qml,js,ts,jsx,tsx}]
+indent_size = 4
+
+# ---- YAML / TOML / JSON ----
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.toml]
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+# ---- Shell ----
+[*.{sh,bash}]
+indent_size = 4
+
+# ---- Markdown ----
+# Trailing whitespace is significant in Markdown (two spaces = line break).
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# ---- Makefile / justfile ----
+[Makefile]
+indent_style = tab
+
+[justfile]
+indent_style = space
+indent_size = 4
+
+# ---- systemd unit files ----
+[*.{service,target,timer,socket,mount,path,slice,scope,swap}]
+indent_size = 4
