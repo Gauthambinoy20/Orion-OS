@@ -173,7 +173,7 @@ a container action) is compromised and ships a malicious update.
 
 **Controls:**
 
-- Pinned base image (`aurora-dx:41`).
+- Pinned base image (`aurora-dx:43`).
 - Cosign signature on every Orion image, verified by users at install.
 - SBOM (SPDX + CycloneDX) attested with `cosign attest` for every
   release. Users can list every component.

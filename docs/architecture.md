@@ -16,7 +16,7 @@ How the image is composed, from upstream base to signed artifacts.
 ```mermaid
 flowchart TD
     subgraph upstream["Upstream"]
-        aurora["ghcr.io/ublue-os/aurora-dx:41<br/>Fedora Atomic + KDE Plasma 6"]
+        aurora["ghcr.io/ublue-os/aurora-dx:43<br/>Fedora Atomic + KDE Plasma 6"]
     end
 
     subgraph recipe["BlueBuild recipe (image/)"]

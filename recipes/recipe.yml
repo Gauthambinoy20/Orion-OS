@@ -27,7 +27,7 @@ description: >-
 base-image: ghcr.io/ublue-os/aurora-dx
 # Pin to a concrete Fedora major so builds are reproducible. Bump only
 # in a dedicated PR after testing the new upstream tag end-to-end.
-image-version: "41"
+image-version: "43"
 
 # Modules are applied in order. Each step is a focused recipe file under
 # recipes/ so we can review and roll back individual concerns. from-file

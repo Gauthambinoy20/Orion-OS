@@ -24,7 +24,7 @@ set dotenv-load := true
 # ----- Tunables (override on the command line) -----
 container := env_var_or_default("CONTAINER", "podman")
 image_tag := env_var_or_default("ORION_TAG", "dev")
-aurora_tag := "41"
+aurora_tag := "43"
 
 # ----- Default: print available recipes -----
 default:

@@ -29,7 +29,7 @@
 # Stage 1: pull the upstream Aurora image, pinned the same way the
 # BlueBuild recipe pins it. Bump in lockstep with recipes/recipe.yml.
 # -----------------------------------------------------------------------------
-ARG AURORA_TAG=41
+ARG AURORA_TAG=43
 FROM ghcr.io/ublue-os/aurora-dx:${AURORA_TAG} AS base
 
 # -----------------------------------------------------------------------------

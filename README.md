@@ -48,7 +48,7 @@ installable ISO.
 
 ```mermaid
 flowchart LR
-    aurora["aurora-dx:41<br/>(Fedora Atomic + KDE)"] --> recipe["BlueBuild recipe<br/>base · kde · security"]
+    aurora["aurora-dx:43<br/>(Fedora Atomic + KDE)"] --> recipe["BlueBuild recipe<br/>base · kde · security"]
     recipe --> oci["Signed OCI image<br/>ghcr.io/&lt;owner&gt;/orion"]
     oci --> iso["Installable ISO<br/>Calamares · LUKS2 + TPM2"]
     iso --> disk[("Encrypted desktop")]
@@ -61,7 +61,7 @@ Full component, data-flow, and build/sign sequence diagrams are in
 
 | Layer | Choice |
 |---|---|
-| Base OS | Fedora Atomic via Universal Blue **Aurora** (`aurora-dx:41`) |
+| Base OS | Fedora Atomic via Universal Blue **Aurora** (`aurora-dx:43`) |
 | Build | **BlueBuild** → OCI → GHCR, **cosign**-signed |
 | Desktop | **KDE Plasma 6** |
 | Security baseline | SELinux enforcing · firewalld strict · hardened sysctls · DNS-over-HTTPS · restrictive Flatpak · LUKS2 + TPM2 |
