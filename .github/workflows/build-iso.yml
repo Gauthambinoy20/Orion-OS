@@ -95,7 +95,7 @@ jobs:
 
       - name: Build ISO
         id: iso
-        uses: jasonn3/build-container-installer@v1.3.0
+        uses: jasonn3/build-container-installer@v1.4.0
         with:
           # The action derives the ISO volume id from image_name, and it
           # must stay <= 32 chars, so the namespace lives in image_repo and
@@ -145,7 +145,7 @@ jobs:
             "${{ steps.sums.outputs.sums }}"
 
       - name: Upload ISO artefacts (workflow run)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: orion-iso-${{ steps.tag.outputs.tag }}
           path: |
@@ -156,7 +156,7 @@ jobs:
 
       - name: Attach to GitHub Release (on tag push only)
         if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           files: |
