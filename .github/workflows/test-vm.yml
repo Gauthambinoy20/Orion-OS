@@ -47,7 +47,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/orion
+  IMAGE_NAME: gauthambinoy20/orion
 
 jobs:
   smoke:

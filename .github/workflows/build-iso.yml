@@ -53,7 +53,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/orion
+  IMAGE_NAME: gauthambinoy20/orion
 
 jobs:
   build:
@@ -97,8 +97,12 @@ jobs:
         id: iso
         uses: jasonn3/build-container-installer@v1.3.0
         with:
-          image_name: ${{ env.IMAGE_NAME }}
-          image_repo: ${{ env.REGISTRY }}
+          # The action derives the ISO volume id from image_name, and it
+          # must stay <= 32 chars, so the namespace lives in image_repo and
+          # image_name is the bare name. Pull ref becomes
+          # ghcr.io/gauthambinoy20/orion:<tag>; VOLID becomes orion-<arch>-<tag>.
+          image_name: orion
+          image_repo: ${{ env.REGISTRY }}/gauthambinoy20
           image_tag: ${{ steps.tag.outputs.tag }}
           variant: Kinoite
           iso_name: orion-${{ steps.tag.outputs.tag }}.iso
