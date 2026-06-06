@@ -26,7 +26,9 @@ description: >-
 # we would otherwise have to maintain ourselves (plan §9.2).
 base-image: ghcr.io/ublue-os/aurora-dx
 # Pin to a concrete Fedora major so builds are reproducible. Bump only
-# in a dedicated PR after testing the new upstream tag end-to-end.
+# in a dedicated PR after testing the new upstream tag end-to-end. When
+# this changes, update VERSION_ID in files/etc/os-release to match — it
+# feeds $releasever, and a mismatch breaks package layering and updates.
 image-version: "43"
 
 # Modules are applied in order. Each step is a focused recipe file under

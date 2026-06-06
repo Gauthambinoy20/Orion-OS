@@ -3,10 +3,6 @@ PRETTY_NAME="Orion OS (pre-alpha)"
 ID=orion
 ID_LIKE="fedora"
 VERSION="pre-alpha (Fedora 43)"
-# VERSION_ID feeds dnf/rpm-ostree $releasever, so it MUST match the
-# Fedora major of the base image (aurora-dx tag in recipes/recipe.yml).
-# Keep the two in lockstep on every base bump, or package layering and
-# on-device updates resolve to repo "fedora-0" and fail.
 VERSION_ID=43
 HOME_URL="https://github.com/Gauthambinoy20/Orion-OS"
 DOCUMENTATION_URL="https://github.com/Gauthambinoy20/Orion-OS/blob/main/ORION_DEVELOPMENT_PLAN.md"
