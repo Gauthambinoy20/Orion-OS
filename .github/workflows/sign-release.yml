@@ -86,7 +86,7 @@ jobs:
           syft-version: v1.18.1
 
       - name: Install crane (image copy)
-        uses: imjasonh/setup-crane@v0.4
+        uses: imjasonh/setup-crane@v0.6
 
       # Re-tag the existing main-built image at the release tag.
       # This preserves the digest so the existing cosign signature

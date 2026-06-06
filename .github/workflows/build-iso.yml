@@ -95,7 +95,7 @@ jobs:
 
       - name: Build ISO
         id: iso
-        uses: jasonn3/build-container-installer@v1.3.0
+        uses: jasonn3/build-container-installer@v1.4.0
         with:
           # The action derives the ISO volume id from image_name, and it
           # must stay <= 32 chars, so the namespace lives in image_repo and
