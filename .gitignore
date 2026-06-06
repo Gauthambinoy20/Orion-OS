@@ -1,0 +1,93 @@
+# Orion OS — root .gitignore
+# Per-language and per-tool sections. Keep alphabetised within sections.
+
+# ---- OS / editor noise ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+.*.swp
+.*.swo
+.idea/
+.vscode/
+*.code-workspace
+.fleet/
+.zed/
+.nvim/
+.helix/
+
+# ---- Build outputs ----
+/build/
+/dist/
+/out/
+/target/
+/result
+/result-*
+
+# ---- Rust ----
+**/target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# ---- Python (used in test/CI helpers only) ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.tox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Node (used by docs / web only) ----
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.parcel-cache/
+.next/
+.astro/
+
+# ---- Containers / images ----
+*.qcow2
+*.img
+*.iso
+*.iso.sha256
+*.iso.sig
+*.raw
+*.tar
+*.tar.zst
+*.tar.gz
+oci-archive/
+
+# ---- Logs / coverage / temp ----
+*.log
+logs/
+coverage/
+*.cover
+.coverage
+htmlcov/
+*.tmp
+.cache/
+
+# ---- Secrets — never commit ----
+# We use KWallet at runtime and GitHub Secrets in CI. Anything that looks
+# like a key file is blocked here as a second line of defence; gitleaks
+# in CI is the first.
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+*.gpg
+!cosign.pub
+.env
+.env.*
+!.env.example
+secrets/
+private/
+
+# ---- mkdocs / Astro site builds (M10) ----
+site/
+public/dist/
