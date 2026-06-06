@@ -1,0 +1,35 @@
+---
+# Orion OS — ISO generator config (M1, P#1.5)
+#
+# Tells the BlueBuild ISO generator how to turn the published Orion OCI
+# image into an installable ISO. The ISO is what end-users actually
+# download, so this file is part of the trust root: any change here
+# affects the bytes that boot on real hardware.
+#
+# References:
+#   - https://blue-build.org/learn/universal-blue-iso/
+#   - Plan §5.4 (release pipeline)
+#   - Plan §5.6 (installer is Calamares; Anaconda fallback)
+
+# Source image to base the ISO on. Must match the image produced by
+# image/recipe.yml and pushed by .github/workflows/build-image.yml.
+# Pinned to the registry path; the tag is supplied by the build job.
+image-name: orion
+image-repo: ghcr.io/gauthambinoy
+
+# Aurora's variant of the Anaconda iso-generator works well for
+# atomic / image-based desktops. Keep this consistent with our base
+# image's heritage; bumping it is a release-pipeline change and goes
+# through its own PR.
+iso-name: orion
+variant: Kinoite
+
+# Title shown on the boot menu and the installer welcome screen.
+# Kept minimal at this stage; branding overrides land in M8.
+flatpaks-list: null
+secure-boot-key: null
+
+# We sign the ISO checksum with the trust-root cosign key in CI; the
+# ISO itself is reproducible bit-for-bit from the signed image, so we
+# do not embed a signature inside it (would change the bytes after
+# signing).
