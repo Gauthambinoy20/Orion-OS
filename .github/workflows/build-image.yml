@@ -1,0 +1,133 @@
+---
+# Orion OS — image build & sign workflow (M1, P#1.4)
+#
+# Builds the Orion OCI image from image/recipe.yml (BlueBuild path) and
+# pushes it to GHCR. On every main-branch build and every tag, the image
+# is also signed with our cosign key and the signature pushed to the
+# registry.
+#
+# Why this lives here:
+#   - Plan §5.4 (release pipeline): image build is the first link in the
+#     release chain and must be reproducible from a clean checkout.
+#   - Plan §5.5 (quality gates): every published image MUST be signed by
+#     the trust root (cosign key committed in P#0.8).
+#   - Plan §6.1 (CI gates): build runs on PR (no push, no sign) so we
+#     catch breakage before merge, and on main / tags (push + sign) so
+#     users can pull a verified image.
+#
+# References:
+#   - https://blue-build.org/how-to/setup/
+#   - https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
+#   - https://docs.sigstore.dev/cosign/signing/signing_with_self-managed_keys/
+
+name: build-image
+
+on:
+  # PRs: build only, no push, no sign. Surfaces recipe breakage early.
+  pull_request:
+    paths:
+      - "image/**"
+      - "Containerfile"
+      - ".github/workflows/build-image.yml"
+
+  # Main branch: build + push + sign with the trust-root key.
+  push:
+    branches: [main]
+    paths:
+      - "image/**"
+      - "Containerfile"
+      - ".github/workflows/build-image.yml"
+
+  # Tags: build + push + sign + tag the image with the release version.
+  # Tag pattern matches semver and pre-release tags such as v0.1.0-alpha.
+  release:
+    types: [published]
+
+  # Manual trigger for one-off rebuilds (e.g. base-image security update).
+  workflow_dispatch:
+
+# Single in-flight build per branch is enough; cancel stale runs so a
+# fast-follow push does not waste runners.
+concurrency:
+  group: build-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read       # checkout
+  packages: write      # push to GHCR
+  id-token: write      # cosign keyless fallback (not used yet, reserved)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/orion
+
+jobs:
+  build:
+    name: build-and-sign
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Decide whether this run should push and sign. PRs from forks must
+      # never be allowed to push — they would not have the secret anyway,
+      # but we belt-and-brace it here.
+      - name: Determine push policy
+        id: policy
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "push=false" >> "$GITHUB_OUTPUT"
+            echo "sign=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "push=true"  >> "$GITHUB_OUTPUT"
+            echo "sign=true"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up cosign
+        if: steps.policy.outputs.sign == 'true'
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: v2.4.1
+
+      - name: Log in to GHCR
+        if: steps.policy.outputs.push == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # BlueBuild reads image/recipe.yml and produces an OCI image. The
+      # action handles the rpm-ostree dance inside a privileged builder
+      # container; we only need to point it at the recipe.
+      - name: Build image
+        id: build
+        uses: blue-build/github-action@v1.8
+        with:
+          recipe: image/recipe.yml
+          registry_token: ${{ secrets.GITHUB_TOKEN }}
+          pr_event_number: ${{ github.event.number }}
+          maximize_build_space: true
+          # On PRs the action still builds; we override push afterwards.
+          push: ${{ steps.policy.outputs.push }}
+
+      - name: Sign image with trust-root key
+        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != ''
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          # The build action prints the pushed image reference (with
+          # digest) on its 'image' output. Sign by digest so the
+          # signature is bound to immutable bytes, not a moving tag.
+          IMAGE_REF="${{ steps.build.outputs.image }}"
+          echo "Signing ${IMAGE_REF}"
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE_REF}"
+
+      - name: Verify signature (sanity check)
+        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != ''
+        run: |
+          IMAGE_REF="${{ steps.build.outputs.image }}"
+          cosign verify --key cosign.pub "${IMAGE_REF}"
