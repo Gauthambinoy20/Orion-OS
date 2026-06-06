@@ -7,7 +7,12 @@
 
 [![Lint](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/lint.yml/badge.svg)](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/lint.yml)
 [![Build image](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/build-image.yml/badge.svg)](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/build-image.yml)
+[![Build ISO](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/build-iso.yml/badge.svg)](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/build-iso.yml)
 [![Security scan](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/security-scan.yml/badge.svg)](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/security-scan.yml)
+[![CodeQL](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/codeql.yml/badge.svg)](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/codeql.yml)
+[![VM smoke](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/test-vm.yml/badge.svg)](https://github.com/Gauthambinoy20/Orion-OS/actions/workflows/test-vm.yml)
+[![cosign signed](https://img.shields.io/badge/images-cosign%20signed-5b8def.svg)](https://blue-build.org/how-to/cosign/)
+[![Base: Fedora 43 Atomic](https://img.shields.io/badge/base-Fedora%2043%20Atomic-51a2da.svg)](https://universal-blue.org/)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL_3.0--or--later-blue.svg)](LICENSE)
 [![Status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange.svg)](ORION_DEVELOPMENT_PLAN.md#62-milestone-status)
 
@@ -172,6 +177,38 @@ single source of truth for what is and isn't approved.
 
 <!-- ✍️ TODO: my words — personal motivation / the story behind Orion. -->
 
+## Productionizing & scaling
+
+<!-- ✍️ TODO: my words — how I'd take Orion from pre-alpha to a real,
+     update-served distro: GHCR rollout channels (unstable/testing/stable),
+     image rebase + rollback story, the self-hosted KVM runner for full
+     boot/Lynis gates, and the signing/SBOM supply chain at release scale. -->
+
+## Key technical decisions & why
+
+<!-- ✍️ TODO: my words — Universal Blue Aurora over a from-scratch distro,
+     BlueBuild recipes over mkosi, cosign signing, the recipes/ + files/
+     layout, and the trade-offs I accepted. -->
+
+## Engineering standards I followed (and skipped)
+
+<!-- ✍️ TODO: my words. -->
+
+## How I used AI tools in development
+
+<!-- ✍️ TODO: my words — the rules file, where I trusted it, where I didn't. -->
+
+## What I'd do differently with more time
+
+<!-- ✍️ TODO: my words. -->
+
+## Edge cases knowingly skipped
+
+<!-- ✍️ TODO: my words — honest limits (see the Status and ROADMAP known
+     issues for the current ones: report-only image CVE gate, Lynis/boot
+     enforcement pending a KVM runner, no preconfigured login in the image). -->
+
 ## License
 
 [GPL-3.0-or-later](LICENSE). Orion OS is free software and always will be.
+© 2026 Gautham Binoy.

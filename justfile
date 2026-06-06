@@ -72,6 +72,10 @@ build-container:
 
 # ===== Test =====
 
+# Fast repository-integrity checks (no image build). Same script CI runs.
+test-repo:
+    bash tests/validate-repo.sh
+
 # Run the local QEMU smoke test (lands in P#1.7 with the script).
 test-vm:
     @test -x scripts/dev/test-vm.sh || { echo "scripts/dev/test-vm.sh not yet committed (P#1.7)"; exit 1; }

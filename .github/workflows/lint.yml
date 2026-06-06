@@ -93,6 +93,17 @@ jobs:
           globs: "**/*.md"
           config: .markdownlint.yml
 
+  validate-repo:
+    name: validate-repo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check repository invariants
+        # Pins the integrity rules whose breakage previously failed the
+        # image build (os-release VERSION_ID vs base major, comment-free
+        # os-release, recipe sources/modules all present).
+        run: bash tests/validate-repo.sh
+
   commitlint:
     name: commitlint
     runs-on: ubuntu-latest
