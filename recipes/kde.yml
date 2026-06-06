@@ -47,6 +47,7 @@ modules:
       - ark                     # archive manager
       # spectacle is used by the AI screen-context feature in M6
       - spectacle
-      # partitionmanager is required at runtime by the Calamares installer
-      # for custom partitioning
-      - partitionmanager
+      # kde-partitionmanager is required at runtime by the Calamares
+      # installer for custom partitioning (the RPM is kde-partitionmanager;
+      # the binary is partitionmanager)
+      - kde-partitionmanager
