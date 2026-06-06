@@ -1,0 +1,14 @@
+NAME="Orion OS"
+PRETTY_NAME="Orion OS (pre-alpha)"
+ID=orion
+ID_LIKE="fedora"
+VERSION="pre-alpha"
+VERSION_ID=0
+HOME_URL="https://github.com/gauthambinoy/Orion-OS"
+DOCUMENTATION_URL="https://github.com/gauthambinoy/Orion-OS/blob/main/ORION_DEVELOPMENT_PLAN.md"
+SUPPORT_URL="https://github.com/gauthambinoy/Orion-OS/discussions"
+BUG_REPORT_URL="https://github.com/gauthambinoy/Orion-OS/issues"
+PRIVACY_POLICY_URL="https://github.com/gauthambinoy/Orion-OS/blob/main/SECURITY.md"
+VARIANT="Aurora-based"
+VARIANT_ID=orion
+DEFAULT_HOSTNAME=orion

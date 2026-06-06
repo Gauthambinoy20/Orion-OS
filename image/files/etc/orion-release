@@ -1,0 +1,10 @@
+Orion OS — pre-alpha.
+
+This system is built from the Orion OS image:
+  https://github.com/gauthambinoy/Orion-OS
+
+It is GPL-3.0-or-later free software with zero telemetry. See the master
+development plan for the full architecture, quality gates, and roadmap.
+
+Image hash and channel are reported by:
+  rpm-ostree status
