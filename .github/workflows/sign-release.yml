@@ -1,0 +1,168 @@
+---
+# Orion OS — release signing workflow (M2, P#2.1)
+#
+# Fires on tag pushes (v*.*.* and v*.*.*-*). Re-tags the latest signed
+# OCI image at the release tag, regenerates+signs an SBOM with syft +
+# cosign attest, and publishes a GitHub Release with the signature
+# bundle, SBOM, and cosign public key attached.
+#
+# Contract with build-image.yml:
+#   build-image always signs by digest on push to main, so by the time
+#   a release tag is cut the image already exists and is already
+#   signed. This workflow does NOT rebuild the image — that would
+#   produce a different digest from the one CI tested. Instead it
+#   pulls the existing image, copies it under the release tag, and
+#   produces the release-time attestations.
+#
+# Why a separate workflow from build-image:
+#   - Different trigger (tag vs push)
+#   - Different permissions (needs contents: write to publish release)
+#   - Different timeout characteristics
+#   - Cleaner audit trail for release provenance
+
+name: sign-release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-*"
+
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.2.0-alpha)"
+        required: true
+
+concurrency:
+  group: sign-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/orion
+
+jobs:
+  sign-and-publish:
+    name: sign-and-publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Releasing ${TAG}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: v2.4.1
+
+      - name: Install syft (SBOM)
+        uses: anchore/sbom-action/download-syft@v0
+        with:
+          syft-version: v1.18.1
+
+      - name: Install crane (image copy)
+        uses: imjasonh/setup-crane@v0.4
+
+      # Re-tag the existing main-built image at the release tag.
+      # This preserves the digest so the existing cosign signature
+      # stays valid — we are only adding a tag, not a new image.
+      - name: Re-tag image at release tag
+        id: retag
+        run: |
+          SRC="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          DST="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}"
+          crane copy "${SRC}" "${DST}"
+          DIGEST="$(crane digest "${DST}")"
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "image=${DST}" >> "$GITHUB_OUTPUT"
+          echo "Released image: ${DST}@${DIGEST}"
+
+      - name: Verify pre-existing cosign signature
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign verify \
+            --key cosign.pub \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.retag.outputs.digest }}"
+
+      - name: Generate SBOM (SPDX JSON)
+        run: |
+          syft "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.retag.outputs.digest }}" \
+            -o spdx-json > orion-sbom.spdx.json
+          syft "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.retag.outputs.digest }}" \
+            -o cyclonedx-json > orion-sbom.cdx.json
+
+      - name: Attach signed SBOM attestation
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
+          cosign attest --yes \
+            --predicate orion-sbom.spdx.json \
+            --type spdxjson \
+            --key cosign.key \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.retag.outputs.digest }}"
+          rm -f cosign.key
+
+      - name: Write release manifest
+        run: |
+          cat > orion-release-manifest.txt <<EOF
+          Orion OS Release — ${{ steps.tag.outputs.tag }}
+          ===========================================
+
+          Image:    ${{ steps.retag.outputs.image }}
+          Digest:   ${{ steps.retag.outputs.digest }}
+          Built:    $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          Commit:   ${{ github.sha }}
+
+          Verify with:
+
+            cosign verify \\
+              --key cosign.pub \\
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.retag.outputs.digest }}
+
+          SBOM attestation (SPDX):
+
+            cosign verify-attestation \\
+              --key cosign.pub \\
+              --type spdxjson \\
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.retag.outputs.digest }}
+          EOF
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "Orion OS ${{ steps.tag.outputs.tag }}"
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            orion-release-manifest.txt
+            orion-sbom.spdx.json
+            orion-sbom.cdx.json
+            cosign.pub
