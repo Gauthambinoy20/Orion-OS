@@ -6,10 +6,13 @@
 #
 #   1. Pins the small set of KDE packages we want to guarantee are
 #      present on every Orion install (some Aurora variants strip them).
-#   2. Removes a handful of KDE applets and applications we deliberately
-#      do NOT want as part of the default Orion experience (per plan
-#      §5.2: focused, AI-first desktop — fewer demos, more deliberate
-#      defaults).
+#
+# There is intentionally no `remove:` list: rpm-ostree fails the module
+# when asked to remove a package that is not installed, and the
+# streamlined Aurora DX base ships neither the KDE PIM suite (kmail,
+# kontact, korganizer, akregator) nor the bundled games (kmahjongg, kpat,
+# kmines). If a future base starts shipping one, remove it here per
+# package after confirming it is present.
 #
 # Reserved for later milestones (added when they carry real content, so
 # we never ship an empty no-op module): default-flatpaks selection and
@@ -47,10 +50,3 @@ modules:
       # partitionmanager is required at runtime by the Calamares installer
       # for custom partitioning
       - partitionmanager
-
-    # No `remove:` list here on purpose. rpm-ostree errors out if asked to
-    # remove a package that isn't installed, and the streamlined Aurora DX
-    # base does not ship the KDE PIM suite (kmail/kontact/korganizer/
-    # akregator) or the bundled games (kmahjongg/kpat/kmines) — so there is
-    # nothing to remove. If a future Aurora base does start shipping one of
-    # these, add it back here individually after confirming it is present.
