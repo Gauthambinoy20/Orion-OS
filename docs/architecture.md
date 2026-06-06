@@ -1,7 +1,7 @@
 # Orion OS — Architecture
 
 This document describes how Orion OS is assembled, derived directly from the
-recipes under [`image/`](../image), the ISO config under [`iso/`](../iso), and
+recipes under [`recipes/`](../recipes) and [`files/`](../files), the ISO config under [`iso/`](../iso), and
 the workflows under [`.github/workflows/`](../.github/workflows). Every node
 below maps to a real file in the repository.
 
@@ -19,7 +19,7 @@ flowchart TD
         aurora["ghcr.io/ublue-os/aurora-dx:43<br/>Fedora Atomic + KDE Plasma 6"]
     end
 
-    subgraph recipe["BlueBuild recipe (image/)"]
+    subgraph recipe["BlueBuild recipe (recipes/)"]
         entry["recipe.yml<br/>(entry point / base-image pin)"]
         base["recipes/base.yml"]
         kde["recipes/kde.yml"]
@@ -117,10 +117,10 @@ flowchart TD
         iso["build-iso"]
         rel["sign-release (tags)"]
     end
-    ghcr[("GHCR\nghcr.io/gauthambinoy20/orion\n:latest · :43 · :&lt;sha&gt;-43")]
-    sig["cosign signatures\n(.sig tags)"]
+    ghcr[("GHCR<br/>ghcr.io/gauthambinoy20/orion<br/>:latest · :43 · :&lt;sha&gt;-43")]
+    sig["cosign signatures<br/>(.sig tags)"]
     sbom["SBOM (syft)"]
-    relpage["GitHub Release\n(ISO + .sha256 + .sig)"]
+    relpage["GitHub Release<br/>(ISO + .sha256 + .sig)"]
 
     bi --> ghcr
     bi --> sig
@@ -142,13 +142,13 @@ boundary is untrusted until verified at it.
 flowchart LR
     subgraph untrusted["Untrusted"]
         net["Network / mirrors"]
-        upstream["Upstream base image\n(ublue-os/aurora-dx)"]
+        upstream["Upstream base image<br/>(ublue-os/aurora-dx)"]
         contrib["PR from a fork"]
     end
 
     subgraph trust["Trust boundary: CI"]
         verify["cosign verify base + lint + Trivy/CodeQL"]
-        keys["Signing key\n(COSIGN_PRIVATE_KEY secret,\nnever in fork PRs)"]
+        keys["Signing key<br/>(COSIGN_PRIVATE_KEY secret,<br/>never in fork PRs)"]
     end
 
     subgraph trusted["Trusted, signed artifacts"]
