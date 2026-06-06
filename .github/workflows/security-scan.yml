@@ -89,7 +89,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Trivy image scan (CVE) — fails on HIGH / CRITICAL
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ needs.resolve-image.outputs.ref }}
           format: sarif
@@ -116,7 +116,7 @@ jobs:
       # IaC scan over our own files. Reports but does not fail —
       # third-party rule disagreements should not block our pipeline.
       - name: Trivy config scan (IaC) — report only
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .

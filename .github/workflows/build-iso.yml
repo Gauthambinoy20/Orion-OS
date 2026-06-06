@@ -95,7 +95,7 @@ jobs:
 
       - name: Build ISO
         id: iso
-        uses: jasonn3/build-container-installer@v1.3.0
+        uses: jasonn3/build-container-installer@v1.4.0
         with:
           image_name: ${{ env.IMAGE_NAME }}
           image_repo: ${{ env.REGISTRY }}
