@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Orion OS — best-effort TPM2 enrollment for the LUKS2 root (M2, P#2.6)
+#
+# Runs from the Calamares orion-tpm-enroll module after the new root
+# is mounted. Adds a TPM2 token to the existing LUKS2 device so the
+# user gets unattended unlock on subsequent boots.
+#
+# Hard rule (plan §5.1 / §7.5): the original passphrase slot is
+# NEVER touched. If the TPM dies, the passphrase still works.
+#
+# Failure policy: this is best-effort. A machine with no TPM, a
+# disabled TPM, or a non-TPM2 implementation is a perfectly valid
+# Orion install — it just doesn't get unattended unlock. Any error
+# from systemd-cryptenroll is logged and we exit 0 so Calamares
+# does not fail the whole install over TPM availability.
+#
+# PCR selection: 7 = secure-boot policy. Binding to PCR 7 means the
+# automatic unlock breaks if firmware secure-boot keys change
+# (typical user-detectable tamper signal) but does NOT break on
+# every kernel update (which would happen if we added 0+2+4+7).
+# Per plan §7.5 this is the right tradeoff for a desktop OS.
+
+set -euo pipefail
+
+LOG=/var/log/orion-tpm-enroll.log
+exec >>"${LOG}" 2>&1
+
+echo "==> orion-tpm-enroll: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+if ! command -v systemd-cryptenroll >/dev/null 2>&1; then
+    echo "systemd-cryptenroll not present; skipping TPM enrollment."
+    exit 0
+fi
+
+if [ ! -e /sys/class/tpm/tpm0 ]; then
+    echo "No TPM device at /sys/class/tpm/tpm0; skipping."
+    exit 0
+fi
+
+# Find the LUKS2 device. In the Calamares-installed layout there is
+# exactly one crypto_LUKS partition; we hand-pick by type rather than
+# parsing /etc/crypttab because crypttab is not yet populated when
+# this module runs.
+LUKS_DEV="$(lsblk -lnpo NAME,FSTYPE | awk '$2=="crypto_LUKS"{print $1; exit}')"
+if [ -z "${LUKS_DEV}" ]; then
+    echo "No crypto_LUKS device found; skipping."
+    exit 0
+fi
+echo "LUKS device: ${LUKS_DEV}"
+
+# Probe the TPM. Some firmware advertises a TPM that is not actually
+# usable; if probe fails we bail out cleanly.
+if ! systemd-cryptenroll --tpm2-device=list >/dev/null 2>&1; then
+    echo "systemd-cryptenroll cannot enumerate TPMs; skipping."
+    exit 0
+fi
+
+# Bind to PCR 7 (secure-boot policy) only. Wider sets break unlock on
+# every kernel update; narrower sets give us no tamper signal.
+if systemd-cryptenroll \
+        --tpm2-device=auto \
+        --tpm2-pcrs=7 \
+        --wipe-slot=tpm2 \
+        "${LUKS_DEV}"; then
+    echo "TPM2 token enrolled successfully on ${LUKS_DEV}."
+else
+    echo "TPM2 enrollment failed; passphrase fallback remains in effect."
+fi
+
+# Sanity: the original passphrase slot (slot 0) MUST still exist.
+# If it doesn't, something has gone catastrophically wrong and we
+# should fail loudly so the user knows before reboot.
+if ! cryptsetup luksDump "${LUKS_DEV}" | grep -q "^[[:space:]]*0:[[:space:]]*luks2"; then
+    echo "FATAL: passphrase slot 0 missing on ${LUKS_DEV}; aborting." >&2
+    exit 1
+fi
+
+echo "==> orion-tpm-enroll: done"
