@@ -1,0 +1,32 @@
+---
+# Orion OS — yamllint configuration
+# Strict but practical: line length is loose because GitHub Actions keys
+# (uses:, with:, env:) routinely exceed 80 chars.
+
+extends: default
+
+rules:
+  line-length:
+    max: 200
+    level: warning
+  truthy:
+    allowed-values: ["true", "false", "on", "off"]
+    check-keys: true
+  comments:
+    min-spaces-from-content: 1
+  document-start:
+    present: true
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+  braces:
+    max-spaces-inside: 1
+  brackets:
+    max-spaces-inside: 1
+
+ignore: |
+  node_modules/
+  .venv/
+  target/
+  build/
+  dist/
