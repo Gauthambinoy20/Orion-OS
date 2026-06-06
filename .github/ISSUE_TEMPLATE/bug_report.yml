@@ -1,0 +1,98 @@
+---
+name: Bug report
+description: Something is broken in Orion OS or its tooling.
+title: "bug: <one-line summary>"
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug.
+
+        **Before you continue:** if this is a *security* issue, please **do
+        not** post it here. Follow the disclosure process in
+        [`SECURITY.md`](../../blob/main/SECURITY.md) instead.
+
+        Please search existing issues first.
+
+  - type: input
+    id: orion-version
+    attributes:
+      label: Orion version / image hash
+      description: Output of `rpm-ostree status` or the image tag/digest you booted.
+      placeholder: "e.g. orion:v0.4.0-beta @ sha256:abcd…"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Hardware tier
+      description: As detected by `orion-tune` (or your best guess).
+      options:
+        - low (8 GB / iGPU)
+        - mid (16 GB / 4–6 GB VRAM)
+        - high (32 GB / 8–12 GB VRAM)
+        - pro (64 GB+ / 16 GB+ VRAM)
+        - unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-mode
+    attributes:
+      label: AI routing mode
+      options:
+        - Air-Gapped
+        - Privacy First
+        - Smart Hybrid
+        - Best Quality
+        - not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+      placeholder: When I press Super+Space and type "…", the launcher …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Boot Orion …
+        2. Open Konsole and run `…`
+        3. Observe …
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Please paste output from `journalctl -b -p warning` and any specific
+        unit logs (`journalctl -u orion-aid -b`). Redact anything sensitive.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Sanity checks
+      options:
+        - label: I confirmed this is **not** a security issue.
+          required: true
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

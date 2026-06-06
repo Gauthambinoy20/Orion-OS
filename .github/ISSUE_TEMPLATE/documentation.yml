@@ -1,0 +1,25 @@
+---
+name: Documentation issue
+description: Something in the docs is wrong, missing, or unclear.
+title: "docs: <one-line summary>"
+labels: ["docs", "triage"]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Which file or page?
+      placeholder: "e.g. ORION_DEVELOPMENT_PLAN.md §5.3, or docs/dev-guide/setup.md"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong, missing, or confusing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested wording or fix (optional)

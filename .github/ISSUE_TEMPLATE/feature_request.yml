@@ -1,0 +1,63 @@
+---
+name: Feature request
+description: Suggest an improvement or new capability.
+title: "feat: <one-line summary>"
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! A few ground rules from the
+        [master plan](../../blob/main/ORION_DEVELOPMENT_PLAN.md):
+
+        - The **12 hero features** for v1.0 are locked (plan §5.2). New
+          features outside that list are **post-1.0** and will most likely
+          be triaged for after launch.
+        - Architecture or quality-gate changes require an **ADR** (plan §9.3).
+          File an issue first to discuss before opening an ADR PR.
+        - We do **not** add telemetry of any kind (plan §7.5).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user pain, not the solution. "I want X" is not enough; tell us *why*.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would Orion behave with this feature? Include UX, defaults, opt-in/out story.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else did you think about and why is your proposal better?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where does this fit?
+      options:
+        - One of the 12 hero features (v1.0)
+        - Plugin / marketplace candidate (post-v1.0)
+        - Tooling / CI / docs
+        - Architecture change (will need an ADR)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Sanity checks
+      options:
+        - label: I read plan §5.2 (the 12 hero features) and understand the v1.0 scope.
+          required: true
+        - label: I searched existing issues for similar proposals.
+          required: true
