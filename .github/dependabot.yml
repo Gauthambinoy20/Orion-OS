@@ -5,6 +5,12 @@
 # Goal: keep the supply chain fresh without noise. Group patch/minor
 # updates per ecosystem so we get one PR a week per area, not 30.
 # Major bumps stay separate so they always get an explicit review.
+#
+# Only ecosystems with a manifest in the repo are declared. Dependabot
+# errors when it cannot find one, so cargo (Rust workspace lands in M4,
+# P#4.1) and npm (commitlint runs via npx, no package.json) are omitted
+# for now. Re-add a cargo block with the workspace in M4, and an npm
+# block only if a package.json is ever committed.
 
 version: 2
 
@@ -29,10 +35,3 @@ updates:
         update-types:
           - minor
           - patch
-
-  # NOTE: cargo and npm ecosystems are intentionally NOT declared yet.
-  # Dependabot errors when it cannot find a manifest, and this repo has
-  # no Cargo.toml (the Rust workspace lands in M4, P#4.1) and no
-  # package.json (commitlint runs via npx, no local manifest). Re-add a
-  # `cargo` block with the workspace in M4, and an `npm` block only if a
-  # package.json is ever committed.
