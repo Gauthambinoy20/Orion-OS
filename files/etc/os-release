@@ -2,13 +2,17 @@ NAME="Orion OS"
 PRETTY_NAME="Orion OS (pre-alpha)"
 ID=orion
 ID_LIKE="fedora"
-VERSION="pre-alpha"
-VERSION_ID=0
-HOME_URL="https://github.com/gauthambinoy/Orion-OS"
-DOCUMENTATION_URL="https://github.com/gauthambinoy/Orion-OS/blob/main/ORION_DEVELOPMENT_PLAN.md"
-SUPPORT_URL="https://github.com/gauthambinoy/Orion-OS/discussions"
-BUG_REPORT_URL="https://github.com/gauthambinoy/Orion-OS/issues"
-PRIVACY_POLICY_URL="https://github.com/gauthambinoy/Orion-OS/blob/main/SECURITY.md"
+VERSION="pre-alpha (Fedora 43)"
+# VERSION_ID feeds dnf/rpm-ostree $releasever, so it MUST match the
+# Fedora major of the base image (aurora-dx tag in recipes/recipe.yml).
+# Keep the two in lockstep on every base bump, or package layering and
+# on-device updates resolve to repo "fedora-0" and fail.
+VERSION_ID=43
+HOME_URL="https://github.com/Gauthambinoy20/Orion-OS"
+DOCUMENTATION_URL="https://github.com/Gauthambinoy20/Orion-OS/blob/main/ORION_DEVELOPMENT_PLAN.md"
+SUPPORT_URL="https://github.com/Gauthambinoy20/Orion-OS/discussions"
+BUG_REPORT_URL="https://github.com/Gauthambinoy20/Orion-OS/issues"
+PRIVACY_POLICY_URL="https://github.com/Gauthambinoy20/Orion-OS/blob/main/SECURITY.md"
 VARIANT="Aurora-based"
 VARIANT_ID=orion
 DEFAULT_HOSTNAME=orion
