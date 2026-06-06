@@ -84,7 +84,7 @@ runs in the VM on a KVM runner.
 - [x] T10 — installable ISO builds and its checksum is signed  (`build-iso`)
 - [x] T11 — image converts to a bootable qcow2  (`test-vm`, no-KVM path)
 - [x] T12 — CodeQL analysis of workflows + JS  (`codeql`)
-- [ ] T13 — booted-VM smoke: services up, base tools present, removed apps absent  (`test-vm`, KVM) · _(stretch — needs KVM runner)_
+- [ ] T13 — booted-VM smoke: services up, base tools present, removed apps absent  (`test-vm`, KVM) · *(stretch — needs KVM runner)*
 
 ## Feature catalogue
 
