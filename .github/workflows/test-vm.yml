@@ -1,0 +1,119 @@
+---
+# Orion OS — VM smoke test workflow (M1, P#1.10)
+#
+# Boots the published Orion OCI image inside QEMU on a GitHub-hosted
+# runner and asserts the result is a real, working Orion system. This
+# is the milestone-closing quality gate plan section 5.5 demands: every
+# milestone ends with at least one bootable check.
+#
+# Trigger model:
+#   - workflow_run after build-image succeeds on main: the canonical
+#     entry point. We never smoke-test an image that did not build.
+#   - tag releases: same idea, gating the release.
+#   - workflow_dispatch: manual rebuild for one-off debugging.
+#
+# Why a separate workflow from build-iso:
+#   - The smoke test runs on the OCI image directly via
+#     bootc-image-builder; it does NOT need an ISO. Coupling them would
+#     either delay smoke-testing by an hour (waiting for ISO) or
+#     require us to redo the qcow2 build inside build-iso.
+#   - Different timeout characteristics: smoke = 30 min, ISO = 90 min.
+
+name: test-vm
+
+on:
+  workflow_run:
+    workflows: ["build-image"]
+    types: [completed]
+    branches: [main]
+
+  release:
+    types: [published]
+
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Image ref (e.g. ghcr.io/<owner>/orion:latest)"
+        required: false
+        default: ""
+
+concurrency:
+  group: test-vm-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/orion
+
+jobs:
+  smoke:
+    name: vm-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # GitHub-hosted runners do not expose /dev/kvm; the test-vm.sh
+      # script auto-detects this and falls back to TCG. Slower (~3x)
+      # but works without privileged self-hosted runners.
+      - name: Install QEMU and podman
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+              qemu-system-x86 podman openssh-client
+
+      - name: Determine image ref
+        id: image
+        run: |
+          case "${{ github.event_name }}" in
+            release)
+              REF="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }}"
+              ;;
+            workflow_dispatch)
+              if [ -n "${{ github.event.inputs.image }}" ]; then
+                REF="${{ github.event.inputs.image }}"
+              else
+                REF="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+              fi
+              ;;
+            *)
+              REF="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+              ;;
+          esac
+          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
+          echo "Smoke-testing ${REF}"
+
+      - name: Pull image
+        run: podman pull "${{ steps.image.outputs.ref }}"
+
+      - name: Boot VM and run smoke tests
+        env:
+          ORION_VM_MEM_MB: "3072"
+          ORION_VM_CPUS: "2"
+          ORION_VM_SSH_PORT: "2222"
+        run: |
+          # The script is reused unchanged from local development. It
+          # builds a qcow2 via bootc-image-builder, boots QEMU, waits
+          # for SSH, runs every script in tests/smoke/, then halts.
+          scripts/dev/test-vm.sh --smoke "${{ steps.image.outputs.ref }}"
+
+      - name: Upload boot log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orion-vm-boot-log
+          path: |
+            /tmp/orion-vm/*.log
+            /tmp/orion-vm/qemu.pid
+          if-no-files-found: ignore
+          retention-days: 7
