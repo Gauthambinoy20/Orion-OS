@@ -1,0 +1,119 @@
+---
+# Orion OS — lint workflow
+#
+# Fast, no-build checks that run on every push and PR. Anything that needs
+# the full image build, the Rust toolchain, or QEMU lives in a separate
+# workflow (added in M1+).
+#
+# Per ORION_DEVELOPMENT_PLAN.md §7.3, every job here is a release-blocking
+# gate: do NOT add `continue-on-error: true` to make a failure go away,
+# fix the code instead.
+
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run yamllint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_file: .yamllint.yml
+          strict: true
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: |
+          # Ubuntu runners ship with shellcheck preinstalled, but pin
+          # the call to apt to make the version explicit and avoid the
+          # third-party ludeeus/action-shellcheck download flakiness.
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends shellcheck
+          shellcheck --version
+      - name: Run shellcheck on all tracked shell scripts
+        env:
+          SHELLCHECK_OPTS: "-S error -x"
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(
+            git ls-files '*.sh' '*.bash'
+            git ls-files | xargs -r -I{} \
+              sh -c 'head -c 80 "$1" 2>/dev/null \
+                | grep -lE "^#!.*\b(ba)?sh\b" "$1" 2>/dev/null || true' _ {}
+          )
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "no shell scripts tracked yet — skipping"
+            exit 0
+          fi
+          printf 'Linting:\n'
+          printf '  %s\n' "${files[@]}"
+          # shellcheck disable=SC2086
+          shellcheck $SHELLCHECK_OPTS "${files[@]}"
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  markdownlint:
+    name: markdownlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v23
+        with:
+          globs: "**/*.md"
+          config: .markdownlint.yml
+
+  commitlint:
+    name: commitlint
+    runs-on: ubuntu-latest
+    # Only run on PRs — direct pushes to main are M0-only and disappear
+    # after milestone M0 per the plan §6.1.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+      - name: Install commitlint
+        run: |
+          npm install --no-save \
+            @commitlint/cli@19 \
+            @commitlint/config-conventional@19
+      - name: Lint PR commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          npx commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
