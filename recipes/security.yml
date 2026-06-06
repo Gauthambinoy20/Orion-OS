@@ -13,63 +13,66 @@
 #     New hardening files added in later M2 commits just append entries
 #     here; the wiring is already done.
 #
+# Included from recipe.yml via from-file, so the modules live under a
+# single top-level `modules:` list.
+#
 # Plan refs:
 #   - §5.1: SELinux enforcing, firewalld strict, DoH, signed boot
 #   - §7.5: non-negotiable security baseline
 #   - §5.5: Lynis hardening score >= 90 is a release blocker
 
-# ---- 1. Hardening file overlays ----
-# Each entry below is owned by the M2 commit named in the comment.
-# Do not remove an entry without an ADR — these are non-negotiable per
-# plan §7.5.
-type: files
-files:
-  # P#2.2 — SELinux enforcing+targeted, owned by us so regressions show
-  # up in code review and Lynis has a stable file to verify.
-  - source: etc/selinux/config
-    destination: /etc/selinux/config
+modules:
+  # ---- 1. Hardening file overlays ----
+  # Each entry below is owned by the M2 commit named in the comment.
+  # Do not remove an entry without an ADR — these are non-negotiable per
+  # plan §7.5.
+  - type: files
+    files:
+      # P#2.2 — SELinux enforcing+targeted, owned by us so regressions show
+      # up in code review and Lynis has a stable file to verify.
+      - source: etc/selinux/config
+        destination: /etc/selinux/config
 
-  # P#2.3 — kernel hardening sysctls. Numbered 99- so we are last word.
-  # Audited against CIS + kernel.org guidance; relaxing requires an ADR.
-  - source: etc/sysctl.d/99-orion-hardening.conf
-    destination: /etc/sysctl.d/99-orion-hardening.conf
+      # P#2.3 — kernel hardening sysctls. Numbered 99- so we are last word.
+      # Audited against CIS + kernel.org guidance; relaxing requires an ADR.
+      - source: etc/sysctl.d/99-orion-hardening.conf
+        destination: /etc/sysctl.d/99-orion-hardening.conf
 
-  # P#2.4 — firewalld "orion" zone: strict default, allows only
-  # DHCPv6, mDNS, SSH; drops inbound echo-request. Foundation for
-  # the Air-Gapped AI mode rule set (plan §5.4).
-  - source: etc/firewalld/zones/orion.xml
-    destination: /etc/firewalld/zones/orion.xml
+      # P#2.4 — firewalld "orion" zone: strict default, allows only
+      # DHCPv6, mDNS, SSH; drops inbound echo-request. Foundation for
+      # the Air-Gapped AI mode rule set (plan §5.4).
+      - source: etc/firewalld/zones/orion.xml
+        destination: /etc/firewalld/zones/orion.xml
 
-  # P#2.5 — DNS-over-HTTPS via systemd-resolved drop-in. Three
-  # diverse upstreams (Quad9, Cloudflare, Google), DoT fallback,
-  # DNSSEC allow-downgrade for captive-portal compatibility.
-  - source: etc/systemd/resolved.conf.d/orion-doh.conf
-    destination: /etc/systemd/resolved.conf.d/orion-doh.conf
+      # P#2.5 — DNS-over-HTTPS via systemd-resolved drop-in. Three
+      # diverse upstreams (Quad9, Cloudflare, Google), DoT fallback,
+      # DNSSEC allow-downgrade for captive-portal compatibility.
+      - source: etc/systemd/resolved.conf.d/orion-doh.conf
+        destination: /etc/systemd/resolved.conf.d/orion-doh.conf
 
-  # P#2.6 — TPM2 enrollment helper invoked by Calamares post-install
-  # and available on the installed system for re-enrollment. Best
-  # effort: never touches the original passphrase slot (plan §7.5).
-  - source: usr/libexec/orion/tpm-enroll-luks
-    destination: /usr/libexec/orion/tpm-enroll-luks
+      # P#2.6 — TPM2 enrollment helper invoked by Calamares post-install
+      # and available on the installed system for re-enrollment. Best
+      # effort: never touches the original passphrase slot (plan §7.5).
+      - source: usr/libexec/orion/tpm-enroll-luks
+        destination: /usr/libexec/orion/tpm-enroll-luks
 
-  # P#2.7 — Flatpak restrictive defaults: revoke broad host
-  # filesystem/device/socket grants for every Flatpak. Per-app
-  # consent flow via `flatpak override` is preserved (plan §7.5).
-  - source: etc/flatpak/overrides/global
-    destination: /etc/flatpak/overrides/global
-  - source: etc/flatpak/remotes.d/flathub-verified.filter
-    destination: /etc/flatpak/remotes.d/flathub-verified.filter
-  - source: usr/libexec/orion/flatpak-setup
-    destination: /usr/libexec/orion/flatpak-setup
-  - source: etc/systemd/system/orion-flatpak-setup.service
-    destination: /etc/systemd/system/orion-flatpak-setup.service
+      # P#2.7 — Flatpak restrictive defaults: revoke broad host
+      # filesystem/device/socket grants for every Flatpak. Per-app
+      # consent flow via `flatpak override` is preserved (plan §7.5).
+      - source: etc/flatpak/overrides/global
+        destination: /etc/flatpak/overrides/global
+      - source: etc/flatpak/remotes.d/flathub-verified.filter
+        destination: /etc/flatpak/remotes.d/flathub-verified.filter
+      - source: usr/libexec/orion/flatpak-setup
+        destination: /usr/libexec/orion/flatpak-setup
+      - source: etc/systemd/system/orion-flatpak-setup.service
+        destination: /etc/systemd/system/orion-flatpak-setup.service
 
----
-# ---- 2. Hardening packages ----
-# Empty for now; later M2 commits (firewalld config, etc.) may add
-# install entries if a tool we depend on is not in the Aurora base.
-type: systemd
-system:
-  enabled:
-    - orion-flatpak-setup.service
-  disabled: []
+  # ---- 2. systemd services ----
+  # Enable the first-boot Flatpak lockdown service. Later M2 commits may
+  # add install entries if a tool we depend on is not in the Aurora base.
+  - type: systemd
+    system:
+      enabled:
+        - orion-flatpak-setup.service
+      disabled: []

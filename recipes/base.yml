@@ -9,38 +9,40 @@
 # Conservative on purpose: every line added here ships to every user, so
 # we keep the surface tiny and grow it via dedicated recipes that each
 # have their own PR and review.
+#
+# Included from recipe.yml via from-file, so the modules live under a
+# single top-level `modules:` list.
 
-# ---- 1. Identity files written to the image ----
-# These overwrite the Aurora-provided files so users see "Orion OS" in
-# /etc/os-release, /etc/orion-release, and downstream tools that read
-# os-release metadata (e.g. neofetch, gnome-control-center, KInfoCenter).
-type: files
-files:
-  - source: etc/os-release
-    destination: /etc/os-release
-  - source: etc/orion-release
-    destination: /etc/orion-release
+modules:
+  # ---- 1. Identity files written to the image ----
+  # These overwrite the Aurora-provided files so users see "Orion OS" in
+  # /etc/os-release, /etc/orion-release, and downstream tools that read
+  # os-release metadata (e.g. neofetch, gnome-control-center, KInfoCenter).
+  - type: files
+    files:
+      - source: etc/os-release
+        destination: /etc/os-release
+      - source: etc/orion-release
+        destination: /etc/orion-release
 
----
-# ---- 2. Base packages ----
-# Tools we want available on every Orion install regardless of tier or
-# user choices. Anything optional belongs in a later recipe.
-type: rpm-ostree
-install:
-  # System administration essentials kept universal.
-  - git
-  - just            # task runner used by our justfile
-  - jq              # used by orion-* scripts and tests
-  - ripgrep         # required by semantic search indexer (M7)
-  - fd-find         # required by semantic search indexer (M7)
-  - age             # encrypted vector store + clipboard history (M5/M7)
-remove: []
+  # ---- 2. Base packages ----
+  # Tools we want available on every Orion install regardless of tier or
+  # user choices. Anything optional belongs in a later recipe.
+  - type: rpm-ostree
+    install:
+      # System administration essentials kept universal.
+      - git
+      - just            # task runner used by our justfile
+      - jq              # used by orion-* scripts and tests
+      - ripgrep         # required by semantic search indexer (M7)
+      - fd-find         # required by semantic search indexer (M7)
+      - age             # encrypted vector store + clipboard history (M5/M7)
+    remove: []
 
----
-# ---- 3. systemd services we always want enabled ----
-# Empty for now — additions land in their feature recipes (e.g. zram in
-# P#3.2). Listed explicitly so the structure is visible in reviews.
-type: systemd
-system:
-  enabled: []
-  disabled: []
+  # ---- 3. systemd services we always want enabled ----
+  # Empty for now — additions land in their feature recipes (e.g. zram in
+  # P#3.2). Listed explicitly so the structure is visible in reviews.
+  - type: systemd
+    system:
+      enabled: []
+      disabled: []
