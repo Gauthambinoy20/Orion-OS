@@ -4,8 +4,18 @@ This is the at-a-glance progress tracker. The authoritative, commit-by-commit
 plan lives in [`ORION_DEVELOPMENT_PLAN.md`](ORION_DEVELOPMENT_PLAN.md) §6 — this
 file summarises it and records where the repository actually is today.
 
-**Current phase:** pre-alpha. The repository, the build/sign/ISO pipeline, and
-the security baseline are in place. No release tag has been cut yet.
+**Current phase:** pre-alpha, pipeline green. The image **builds, is
+cosign-signed, and is published to GHCR**; the **ISO builds and its checksum is
+signed**; and all six CI workflows are green. No release **tag** has been cut
+yet — the full booted-VM smoke and the `v0.1.0-alpha` tag are the remaining M1
+exit criteria (they need a KVM runner; see Known issues).
+
+## How to use this
+
+Per-step loop: plan → write the smallest slice → write its test → run → tick the
+box and its test ids → commit → review. Priority tags: **(core)** must-have ·
+**(polish)** do if time · **(stretch)** only after core + polish are green. The
+commit-by-commit authority is [`ORION_DEVELOPMENT_PLAN.md`](ORION_DEVELOPMENT_PLAN.md) §6.
 
 ## Milestones
 
@@ -15,7 +25,7 @@ Legend: `[x]` complete · `[~]` scaffolded, not yet validated by a release tag �
 | | Milestone | Tag | Status |
 |---|---|---|---|
 | `[x]` | **M0 — Repo bootstrap** | `v0.0.1` | Licence, governance docs, lint CI, templates, cosign key — all committed |
-| `[~]` | **M1 — First bootable image** | `v0.1.0-alpha` | BlueBuild recipes, Containerfile, image/ISO/VM workflows present; image build is being driven green in CI |
+| `[~]` | **M1 — First bootable image** | `v0.1.0-alpha` | Image builds + signs + publishes to GHCR; ISO builds + signs; qcow2 conversion validated. Tag pending full booted-VM smoke on a KVM runner |
 | `[~]` | **M2 — Security baseline** | `v0.2.0-alpha` | SELinux, sysctls, firewalld, DoH, Flatpak lockdown, LUKS2 + TPM2 installer, Trivy + Lynis scan — committed |
 | `[ ]` | **M3 — Performance & tier** | `v0.3.0-alpha` | CachyOS kernel, zram, `orion-tune` tier detection |
 | `[ ]` | **M4 — AI runtime core** | `v0.4.0-beta` | `orion-aid` daemon, local + cloud backends, routing, spend caps |
@@ -56,11 +66,58 @@ months solo** (do not pretend it is faster — see plan §8.1).
 - No tagged ISO release or boot screenshots yet — they follow the first
   release tag and a KVM boot run.
 
+## Test Inventory
+
+Numbered so coverage is provable, not just a number. Repository-integrity
+checks run in CI (the `validate-repo` lint job, `just test-repo`); boot smoke
+runs in the VM on a KVM runner.
+
+- [x] T01 — os-release VERSION_ID equals the recipe base-image major  (`validate-repo`)
+- [x] T02 — os-release is comment-free KEY=VALUE  (`validate-repo`)
+- [x] T03 — every files-module `source:` exists under `files/`  (`validate-repo`)
+- [x] T04 — every recipe `from-file:` target exists under `recipes/`  (`validate-repo`)
+- [x] T05 — all YAML passes strict yamllint  (`lint`)
+- [x] T06 — all shell passes `shellcheck -S error`  (`lint`)
+- [x] T07 — all Markdown passes markdownlint  (`lint`)
+- [x] T08 — no secrets in history (gitleaks)  (`lint`)
+- [x] T09 — image builds and is cosign-signed  (`build-image`)
+- [x] T10 — installable ISO builds and its checksum is signed  (`build-iso`)
+- [x] T11 — image converts to a bootable qcow2  (`test-vm`, no-KVM path)
+- [x] T12 — CodeQL analysis of workflows + JS  (`codeql`)
+- [ ] T13 — booted-VM smoke: services up, base tools present, removed apps absent  (`test-vm`, KVM) · _(stretch — needs KVM runner)_
+
+## Feature catalogue
+
+| Area | Priority | Status |
+|---|---|---|
+| BlueBuild image (base + KDE) | core | ✅ builds, signed, on GHCR |
+| Security baseline (SELinux/firewalld/sysctl/DoH/Flatpak) | core | ✅ baked into image |
+| LUKS2 + TPM2 installer (Calamares) | core | ✅ config shipped |
+| Installable ISO + signed checksum | core | ✅ builds in CI |
+| Supply chain: cosign signing, SBOM, Trivy, CodeQL | core | ✅ green (image CVE report-only) |
+| Booted-VM smoke gate | polish | ⏳ KVM runner |
+| Performance & tier (M3) · AI runtime (M4) · 12 hero features (M5–M8) | stretch | ⬜ planned |
+
+## Known issues (continued)
+
+- **Maximum test surface is thin by nature.** This repo is declarative
+  (YAML/shell/config), so coverage is integrity + lint + the booted smoke, not
+  unit tests. Logic-bearing code (the Rust daemons, M4+) ships with unit tests.
+
 ## Next
 
-1. Get `build-image` green and publish the first `orion` image to GHCR.
-2. Configure the cosign signing secret so published images are signed.
-3. Cut `v0.1.0-alpha` once the ISO boots in QEMU (M1 exit criteria).
+1. Stand up a KVM-capable runner to enforce the booted-VM smoke (T13) and the
+   Lynis `>= 90` gate, then cut **`v0.1.0-alpha`** (M1 done).
+2. Begin **M3** (performance & tier): CachyOS kernel, zram, `orion-tune`.
+
+## Definition of Done (whole project)
+
+Mirrors the 10/10 gate: single-author trace-clean history · builds + runs with
+proof · maximum warranted tests green · zero fake data · full CI green with real
+badges · supply-chain signed (cosign + SBOM) · no unactionable CVEs in our code
+· small human commits · README + ROADMAP + diagrams complete · pushed. Adapted
+for an OS image: "deploy" is the signed GHCR image + ISO (not a web/AWS app), so
+the AWS/Terraform and web-UI/Lighthouse gates are N/A by project type.
 
 ## ✍️ TODO: my words
 
