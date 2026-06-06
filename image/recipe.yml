@@ -1,0 +1,43 @@
+---
+# Orion OS — BlueBuild top-level recipe
+#
+# This is the entry point BlueBuild uses to assemble the Orion OS OCI
+# image. It is intentionally tiny: it sets identity, picks the upstream
+# base image (Universal Blue Aurora, KDE-first, per ORION_DEVELOPMENT_PLAN.md
+# §5.1), and then layers the Orion-specific recipes in order.
+#
+# The split between this file and image/recipes/*.yml is the BlueBuild
+# convention and lets each concern (base, KDE, security, performance,
+# AI runtime, branding) evolve in its own focused file with its own
+# review history.
+#
+# References:
+#   - BlueBuild docs:        https://blue-build.org/
+#   - Universal Blue Aurora: https://docs.projectaurora.io/
+
+name: orion
+description: >-
+  Orion OS — an AI-first, image-based Linux desktop built on Fedora
+  Atomic via Universal Blue Aurora and KDE Plasma 6. Local-first AI by
+  default, hybrid cloud is opt-in.
+
+# Upstream image we layer on top of. Aurora ships KDE Plasma + sensible
+# desktop defaults on a Fedora Atomic base, which removes years of work
+# we would otherwise have to maintain ourselves (plan §9.2).
+base-image: ghcr.io/ublue-os/aurora-dx
+# Pin to a concrete Fedora major so builds are reproducible. Bump only
+# in a dedicated PR after testing the new upstream tag end-to-end.
+image-version: "41"
+
+# Modules are applied in order. Each step is a focused recipe file under
+# image/recipes/ so we can review and roll back individual concerns.
+modules:
+  - from-file: recipes/base.yml
+  - from-file: recipes/kde.yml
+  - from-file: recipes/security.yml
+
+# When a module is added in a later milestone, append it here in the same
+# PR that introduces the recipe file. Order to follow once the modules
+# exist (do not enable until the recipe file is committed):
+#   - from-file: recipes/performance.yml  # P#3.1+
+#   - from-file: recipes/ai.yml           # P#4.7
