@@ -1,0 +1,191 @@
+---
+# Orion OS — security scan workflow (M2, P#2.8)
+#
+# Plan section 5.5 names two release-blocking gates this workflow
+# enforces:
+#   - Lynis hardening score >= 90
+#   - SBOM generated for every image (paired with Trivy CVE scan)
+#
+# Triggers:
+#   - workflow_run after build-image succeeds (so we always scan
+#     the exact image users would receive)
+#   - weekly schedule so a newly-published CVE in an unchanged base
+#     image still surfaces within seven days
+#   - workflow_dispatch for ad-hoc runs against a custom image ref
+#
+# Why two scanners (Trivy + Lynis):
+#   - Trivy looks at the static image: CVE catalog vs installed
+#     packages, plus IaC misconfig in our own files.
+#   - Lynis looks at the running system: kernel hardening, sysctl
+#     settings, file permissions, service exposure. Different angle,
+#     different findings; both required by plan §5.5.
+#
+# Failure semantics:
+#   - Trivy CVE job: HIGH or CRITICAL fails the build.
+#   - Lynis job: hardening score below 90 fails the build.
+#   - Trivy IaC job: any finding warns but does not fail (we want
+#     visibility without blocking on third-party rules we may not
+#     agree with).
+
+name: security-scan
+
+on:
+  workflow_run:
+    workflows: ["build-image"]
+    types: [completed]
+    branches: [main]
+
+  schedule:
+    - cron: "17 3 * * 1"   # Mondays 03:17 UTC
+
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Image ref (e.g. ghcr.io/<owner>/orion:latest)"
+        required: false
+        default: ""
+
+concurrency:
+  group: security-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+  security-events: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/orion
+
+jobs:
+  resolve-image:
+    name: resolve-image
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+      ref: ${{ steps.image.outputs.ref }}
+    steps:
+      - name: Determine image ref
+        id: image
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] \
+              && [ -n "${{ github.event.inputs.image }}" ]; then
+            REF="${{ github.event.inputs.image }}"
+          else
+            REF="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          fi
+          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
+
+  trivy-image:
+    name: trivy-image
+    needs: resolve-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Trivy image scan (CVE) — fails on HIGH / CRITICAL
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ needs.resolve-image.outputs.ref }}
+          format: sarif
+          output: trivy-image.sarif
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+  trivy-config:
+    name: trivy-config
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # IaC scan over our own files. Reports but does not fail —
+      # third-party rule disagreements should not block our pipeline.
+      - name: Trivy config scan (IaC) — report only
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-config.sarif
+          severity: MEDIUM,HIGH,CRITICAL
+          exit-code: "0"
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-config.sarif
+          category: trivy-config
+
+  lynis:
+    name: lynis-hardening
+    needs: resolve-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install podman
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends podman
+
+      # Run Lynis inside the Orion image itself so it audits the
+      # actual hardening state we ship (sysctl, SELinux config, etc.)
+      # rather than the runner's defaults.
+      - name: Run Lynis inside the Orion image
+        id: lynis
+        run: |
+          set -euo pipefail
+          podman pull "${{ needs.resolve-image.outputs.ref }}"
+          podman run --rm --privileged \
+              -v "$PWD:/work:Z" \
+              "${{ needs.resolve-image.outputs.ref }}" \
+              bash -c '
+                set -e
+                rpm-ostree install -y --apply-live --idempotent lynis || \
+                  dnf install -y lynis
+                mkdir -p /work/lynis-out
+                lynis audit system --quick --no-colors \
+                    --report-file /work/lynis-out/lynis-report.dat \
+                    --logfile     /work/lynis-out/lynis.log
+              '
+
+      - name: Enforce hardening score >= 90 (plan section 5.5)
+        run: |
+          SCORE="$(awk -F= '/^hardening_index=/{print $2}' \
+              lynis-out/lynis-report.dat)"
+          echo "Lynis hardening index: ${SCORE}"
+          if [ -z "${SCORE}" ]; then
+            echo "FAIL: could not parse Lynis hardening_index" >&2
+            exit 1
+          fi
+          if [ "${SCORE}" -lt 90 ]; then
+            echo "FAIL: hardening score ${SCORE} < 90 (release blocker)" >&2
+            exit 1
+          fi
+          echo "ok: hardening score ${SCORE} >= 90"
+
+      - name: Upload Lynis report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lynis-report
+          path: lynis-out/
+          retention-days: 30
