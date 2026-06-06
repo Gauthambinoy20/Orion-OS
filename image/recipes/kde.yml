@@ -1,0 +1,78 @@
+---
+# Orion OS — KDE Plasma recipe (M1, P#1.2)
+#
+# Aurora already ships KDE Plasma 6 on a Fedora Atomic base, so the bulk
+# of the desktop is inherited. This recipe only:
+#
+#   1. Pins the small set of KDE packages we want to guarantee are
+#      present on every Orion install (some Aurora variants strip them).
+#   2. Removes a handful of KDE applets and applications we deliberately
+#      do NOT want as part of the default Orion experience (per plan
+#      §5.2: focused, AI-first desktop — fewer demos, more deliberate
+#      defaults).
+#   3. Reserves the structural slots where AI-aware KDE integration
+#      (KRunner plugin, Plasma activity hooks) will land in M6.
+#
+# Anything user-visible at first boot — wallpapers, logo, plasma look-
+# and-feel package — belongs in the branding recipe (P#1.8 placeholder,
+# real assets in M8).
+
+# ---- 1. Packages we always want present ----
+type: rpm-ostree
+install:
+  # Core Plasma 6 desktop pieces. Listed even though Aurora installs
+  # them, so a future Aurora variant cannot silently drop them on us.
+  - plasma-desktop
+  - plasma-workspace
+  - plasma-systemmonitor
+  - kwin
+  - kde-cli-tools
+
+  # Default Orion application set. Kept intentionally small; user-tier
+  # bundles land in their own recipes.
+  - dolphin                 # file manager
+  - konsole                 # terminal
+  # kate doubles as the default GUI text editor for AI prompts
+  - kate
+  - kcalc                   # calculator
+  - gwenview                # image viewer
+  - okular                  # PDF / document viewer
+  - ark                     # archive manager
+  # spectacle is used by the AI screen-context feature in M6
+  - spectacle
+  # partitionmanager is required at runtime by the Calamares installer
+  # for custom partitioning
+  - partitionmanager
+
+# ---- 2. Packages we explicitly do NOT want by default ----
+# Either redundant with our AI-first defaults, or known to confuse new
+# users. Each removal is a deliberate product decision; if you want one
+# back, open a PR with rationale.
+remove:
+  - kmail              # we ship a different default mail story in M8
+  - akregator          # superseded by AI feed reader (M9)
+  - korganizer         # superseded by AI calendar agent (M6)
+  - kontact            # umbrella for the above three
+  - kmahjongg          # default-game removals: keep the desktop focused
+  - kpat
+  - kmines
+
+---
+# ---- 3. Default Plasma look-and-feel ----
+# We do NOT switch the global theme here — that belongs to the branding
+# recipe so theming changes ship with their assets in a single PR. This
+# module only reserves the slot.
+type: default-flatpaks
+notify: true
+system:
+  install: []
+  # Per-user flatpaks land in their own recipe (P#4.x) once we have
+  # decided the default app set. Empty on purpose for now.
+
+---
+# ---- 4. Files / dconf / kwriteconfig hooks ----
+# Reserved for M6 (AI-aware KDE integration). Keeping the section
+# present-but-empty so the structure is visible in reviews and the diff
+# in M6 is small and obvious.
+type: files
+files: []
