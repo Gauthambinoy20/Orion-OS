@@ -109,17 +109,15 @@ jobs:
       # container; we only need to point it at the recipe (the path is
       # relative to the recipes/ directory).
       # On push/tags the BlueBuild action signs the pushed image with the
-      # trust-root key itself (it detects cosign.pub in the repo root and
-      # reads COSIGN_PRIVATE_KEY / COSIGN_PASSWORD from the env). On PRs
-      # push=false, so it builds only and never needs the key.
+      # trust-root key, supplied via the cosign_private_key input. The key
+      # is a passwordless cosign key (required for non-interactive CI). On
+      # PRs push=false, so the action builds only and never signs.
       - name: Build image
         id: build
         uses: blue-build/github-action@v1.11
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         with:
           recipe: recipe.yml
+          cosign_private_key: ${{ secrets.COSIGN_PRIVATE_KEY }}
           registry_token: ${{ secrets.GITHUB_TOKEN }}
           registry_namespace: gauthambinoy20
           pr_event_number: ${{ github.event.number }}
