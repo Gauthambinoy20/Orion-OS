@@ -40,10 +40,12 @@ months solo** (do not pretend it is faster — see plan §8.1).
 
 ## Known issues
 
-- The image has **not** been built into a published, signed artifact yet — the
-  `build-image` workflow is being driven green; release signing activates once
-  the `COSIGN_PRIVATE_KEY` secret is configured.
-- No installable ISO or screenshots yet (both follow the first green image build).
+- **Lynis hardening gate (plan §5.5)** is currently *report-only* in
+  `security-scan`. Lynis audits a running system, so a non-booted container
+  audit structurally under-scores; the `>= 90` release-blocker enforcement
+  belongs in the booted VM (`test-vm`) and should move there once it is green.
+- No installable-ISO release or boot screenshots yet — they follow the first
+  green `build-iso` / `test-vm` run.
 
 ## Next
 

@@ -110,11 +110,20 @@ jobs:
       - name: Compute ISO checksum
         id: sums
         run: |
-          ISO_PATH="${{ steps.iso.outputs.iso_path }}"
+          # The action's iso_path output is the directory; the file itself
+          # is the iso_name we asked for. Resolve the real file, falling
+          # back to a glob so a future action output change can't silently
+          # break us.
+          ISO_PATH="${{ steps.iso.outputs.iso_path }}/orion-${{ steps.tag.outputs.tag }}.iso"
+          if [ ! -f "${ISO_PATH}" ]; then
+            ISO_PATH="$(find . -maxdepth 3 -name 'orion-*.iso' -type f | head -n1)"
+          fi
           if [ -z "${ISO_PATH}" ] || [ ! -f "${ISO_PATH}" ]; then
-            echo "ISO not found at expected path" >&2
+            echo "ISO not found; searched the action output dir and ./**" >&2
+            find . -maxdepth 3 -name '*.iso' -type f || true
             exit 1
           fi
+          echo "Found ISO: ${ISO_PATH}"
           sha256sum "${ISO_PATH}" > "${ISO_PATH}.sha256"
           echo "iso=${ISO_PATH}" >> "$GITHUB_OUTPUT"
           echo "sums=${ISO_PATH}.sha256" >> "$GITHUB_OUTPUT"
