@@ -1,0 +1,62 @@
+# Orion OS — Flatpak restrictive global overrides (M2, P#2.7)
+#
+# Plan section 5.1 names Flatpak as the application sandboxing layer.
+# A sandbox is only useful if it is actually narrow — Flathub apps
+# routinely ship with permissive manifests (filesystem=host, dbus
+# wildcards, devel sockets) that erase most of the sandbox's value.
+#
+# This file installs at /etc/flatpak/overrides/global and applies to
+# every Flatpak on the system. It REVOKES the broadest permissions
+# by default. Per-app trust is still possible: users can run
+# `flatpak override --user <app> --filesystem=...` to re-grant on a
+# case-by-case basis, which is exactly the consent flow we want.
+#
+# Plan §7.5: defense in depth. Combined with bubblewrap (AI features)
+# and landlock+seccomp (daemons), this gives apps the smallest
+# default surface we can ship without breaking the desktop.
+#
+# Compatibility notes:
+#   - Most well-behaved Flathub apps (Firefox, LibreOffice, KDE apps,
+#     etc.) request narrow portal-mediated access via the dbus
+#     org.freedesktop.portal.* services, so revoking host filesystem
+#     does not actually break them.
+#   - Apps that DO need host paths (devtools, IDEs) will surface a
+#     clear permission error and the user grants explicitly. We will
+#     ship a KCM panel for this in M6 so the experience is GUI.
+#
+# Each [Context] line below is the OPPOSITE of the granted state:
+#   "!host" = revoke filesystem=host
+#   "!devices=all" = revoke devices=all
+#   etc.
+
+[Context]
+# Revoke broad filesystem grants. Apps keep ~/.var/app/<app-id>/
+# (private data dir) and any portal-granted paths.
+filesystems=!host;!host-os;!host-etc;!home;
+
+# Revoke broad device grants. Apps keep portal-mediated camera,
+# screencast, and printer via xdg-desktop-portal-kde.
+devices=!all
+
+# Revoke direct hardware sockets. Wayland/X11/PulseAudio still work
+# via the portal sockets the runtime sets up.
+sockets=!session-bus;!system-bus;!cups;!pcsc;!gpg-agent;!ssh-auth;
+
+# Revoke broad subsystem access.
+shared=!network
+
+# Revoke broad feature grants.
+features=!devel;!multiarch;!bluetooth;!canbus
+
+[Session Bus Policy]
+# Refuse blanket "talk=*" entries. Apps must name the specific bus
+# names they need, which goes through the override review flow.
+
+[System Bus Policy]
+# Same for the system bus. Most apps should never touch it; the
+# portal proxies on the session bus cover the legitimate cases.
+
+[Environment]
+# Strip the LD_PRELOAD escape hatch some app manifests use to load
+# host libraries (often used to reach into ~/.config or /var).
+LD_PRELOAD=

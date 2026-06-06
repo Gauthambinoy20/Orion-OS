@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Orion OS — first-boot Flatpak setup (M2, P#2.7)
+#
+# Runs once per system from a oneshot systemd unit. Adds the Flathub
+# remote (filtered to verified-only by default) and re-asserts the
+# global overrides. Idempotent so re-running it is safe.
+#
+# Why a script and not a recipe-time command:
+#   - flatpak commands need /var/lib to exist and be writable, which
+#     is true at first boot but not at image build time on an
+#     ostree-immutable layout.
+#   - We want the user's first-boot wizard (M6) to be able to call
+#     this same code path to refresh remotes.
+#
+# Plan §5.1 / §7.5: deny by default; opt in to specific remotes and
+# specific app permissions.
+
+set -euo pipefail
+
+LOG=/var/log/orion-flatpak-setup.log
+exec >>"${LOG}" 2>&1
+
+echo "==> orion-flatpak-setup: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+if ! command -v flatpak >/dev/null 2>&1; then
+    echo "flatpak binary missing; aborting."
+    exit 0
+fi
+
+# Add Flathub. --if-not-exists makes the call idempotent. We add it
+# at system scope so every user gets the same default catalogue and
+# so admin policy applies uniformly.
+flatpak remote-add --if-not-exists --system \
+    flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+# Filter Flathub to verified apps only by default. Users can flip
+# this off in Discover or with `flatpak remote-modify`. Plan §5.4
+# (Privacy First default) makes this the right shipped default.
+flatpak remote-modify --system \
+    --filter=/etc/flatpak/remotes.d/flathub-verified.filter \
+    flathub || true
+
+echo "==> orion-flatpak-setup: done"

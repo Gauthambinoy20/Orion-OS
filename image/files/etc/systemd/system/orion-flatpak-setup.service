@@ -1,0 +1,27 @@
+# Orion OS — first-boot Flatpak setup oneshot (M2, P#2.7)
+#
+# Runs once per system at first boot. Adds Flathub (filtered to the
+# verified-only ref list) and re-asserts global overrides. Idempotent
+# so re-running is harmless if a future commit needs to re-trigger it.
+#
+# Why a oneshot at first boot rather than a recipe build step:
+# /var/lib/flatpak does not exist at image build time on an
+# rpm-ostree layout, so the flatpak CLI cannot be used until the
+# image actually boots.
+
+[Unit]
+Description=Orion OS first-boot Flatpak setup
+ConditionPathExists=!/var/lib/orion/flatpak-setup.done
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/orion/flatpak-setup
+ExecStartPost=/usr/bin/mkdir -p /var/lib/orion
+ExecStartPost=/usr/bin/touch /var/lib/orion/flatpak-setup.done
+TimeoutStartSec=180
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

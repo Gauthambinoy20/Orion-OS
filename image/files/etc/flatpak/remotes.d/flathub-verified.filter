@@ -1,0 +1,32 @@
+# Orion OS — Flathub verified-only filter (M2, P#2.7)
+#
+# Used by `flatpak remote-modify --filter=...` to restrict the
+# Flathub remote to verified-publisher apps by default. Each line
+# is `allow|deny <ref pattern>`. The wildcard "*" is allowed
+# (anything not denied is allowed); we deny by default and allow
+# only the verified ref namespace.
+#
+# Reference for filter syntax:
+#   man flatpak-remote (FILTER FILE FORMAT)
+
+deny *
+allow runtime/*
+allow app/com.github.tchx84.Flatseal/*
+allow app/org.mozilla.firefox/*
+allow app/org.libreoffice.LibreOffice/*
+allow app/org.kde.*/*
+allow app/org.gnome.*/*
+allow app/com.valvesoftware.Steam/*
+allow app/com.spotify.Client/*
+allow app/com.discordapp.Discord/*
+allow app/com.slack.Slack/*
+allow app/org.signal.Signal/*
+allow app/org.telegram.desktop/*
+allow app/org.videolan.VLC/*
+allow app/org.blender.Blender/*
+allow app/org.gimp.GIMP/*
+allow app/org.inkscape.Inkscape/*
+allow app/com.obsproject.Studio/*
+allow app/com.visualstudio.code/*
+allow app/com.jetbrains.*/*
+allow app/io.github.shiftey.Desktop/*
