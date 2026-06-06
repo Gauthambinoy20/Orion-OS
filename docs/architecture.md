@@ -103,3 +103,66 @@ sequenceDiagram
         GH->>Dev: GitHub Release (signature + SBOM + cosign.pub)
     end
 ```
+
+## 4. Release & distribution topology
+
+How a build reaches a user's machine — Orion's equivalent of a deployment
+diagram. There is no app server: the "deploy" is a signed image in a registry
+plus an ISO.
+
+```mermaid
+flowchart TD
+    subgraph ci["GitHub Actions (CI/CD)"]
+        bi["build-image"]
+        iso["build-iso"]
+        rel["sign-release (tags)"]
+    end
+    ghcr[("GHCR\nghcr.io/gauthambinoy20/orion\n:latest · :43 · :&lt;sha&gt;-43")]
+    sig["cosign signatures\n(.sig tags)"]
+    sbom["SBOM (syft)"]
+    relpage["GitHub Release\n(ISO + .sha256 + .sig)"]
+
+    bi --> ghcr
+    bi --> sig
+    iso --> relpage
+    rel --> sbom
+    rel --> relpage
+
+    ghcr -->|rpm-ostree rebase| dev1["existing Fedora Atomic user"]
+    relpage -->|flash + Calamares install| dev2["new install (LUKS2 + TPM2)"]
+    sig -.cosign verify --key cosign.pub.-> dev1
+```
+
+## 5. Security & trust boundaries
+
+Where untrusted input enters and what is trusted. Caption: everything left of a
+boundary is untrusted until verified at it.
+
+```mermaid
+flowchart LR
+    subgraph untrusted["Untrusted"]
+        net["Network / mirrors"]
+        upstream["Upstream base image\n(ublue-os/aurora-dx)"]
+        contrib["PR from a fork"]
+    end
+
+    subgraph trust["Trust boundary: CI"]
+        verify["cosign verify base + lint + Trivy/CodeQL"]
+        keys["Signing key\n(COSIGN_PRIVATE_KEY secret,\nnever in fork PRs)"]
+    end
+
+    subgraph trusted["Trusted, signed artifacts"]
+        img["Signed OCI image"]
+        isoart["ISO + signed checksum"]
+    end
+
+    user["User verifies with cosign.pub"]
+
+    upstream --> verify
+    net --> verify
+    contrib -->|build only, no push, no key| verify
+    verify --> keys --> img --> isoart
+    img --> user
+    isoart --> user
+```
+
