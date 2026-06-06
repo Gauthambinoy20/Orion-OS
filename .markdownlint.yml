@@ -1,0 +1,42 @@
+---
+# Orion OS — markdownlint configuration
+# We disable line-length rules because the plan and most docs use long
+# prose lines that are easier to read and review in their natural form.
+
+default: true
+
+# MD013 — line length: off (prose is long-line)
+MD013: false
+
+# MD024 — duplicate headings: allow when nested under different parents
+MD024:
+  siblings_only: true
+
+# MD033 — inline HTML: allow (we use <details>, <summary>, badges, etc.)
+MD033: false
+
+# MD041 — first line in file must be a top-level heading: off
+# (some files start with admonitions or front-matter)
+MD041: false
+
+# MD034 — bare URLs: allow (we sometimes intentionally show full URLs)
+MD034: false
+
+# MD032 — lists should be surrounded by blanks: off
+# The master plan uses tightly-packed numbered lists inside agent
+# instructions where surrounding blanks would change the rendered intent.
+# Per ORION_DEVELOPMENT_PLAN.md §7.6, agents must not edit the plan to
+# satisfy a linter rule, so we relax this rule project-wide.
+MD032: false
+
+# MD040 — fenced code blocks should have a language: warn but allow
+# bare backticks for raw command-line trailer snippets where syntax
+# highlighting would be misleading.
+MD040: false
+
+# MD060 — table column style: off
+# Introduced in markdownlint v0.40 (markdownlint-cli2-action v23). The
+# master plan's tightly-packed tables intentionally omit padding spaces
+# around pipes and (per ORION_DEVELOPMENT_PLAN.md §7.6) cannot be
+# reformatted by an agent, so we relax this rule project-wide.
+MD060: false
