@@ -1,0 +1,38 @@
+# Orion OS — CODEOWNERS
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Until we have additional maintainers, every file is owned by the
+# project maintainer. The plan §9.3 requires 1 maintainer approval for
+# ADRs pre-1.0 and 2 post-1.0; this file is the gate that enforces it.
+#
+# Specific path rules below override the catch-all. Order matters:
+# the LAST matching pattern wins.
+
+# Catch-all: everything is owned by the maintainer.
+*                                       @gauthambinoy
+
+# ---- Governance & trust root (extra-careful review) ----
+LICENSE                                 @gauthambinoy
+SECURITY.md                             @gauthambinoy
+CODE_OF_CONDUCT.md                      @gauthambinoy
+CODEOWNERS                              @gauthambinoy
+.github/CODEOWNERS                      @gauthambinoy
+ORION_DEVELOPMENT_PLAN.md               @gauthambinoy
+cosign.pub                              @gauthambinoy
+
+# ---- CI / release pipeline ----
+.github/workflows/                      @gauthambinoy
+.github/dependabot.yml                  @gauthambinoy
+
+# ---- Image build ----
+Containerfile                           @gauthambinoy
+image/                                  @gauthambinoy
+iso/                                    @gauthambinoy
+
+# ---- Architecture decisions ----
+docs/adr/                               @gauthambinoy
+
+# ---- Rust workspace ----
+Cargo.toml                              @gauthambinoy
+rust-toolchain.toml                     @gauthambinoy
+crates/                                 @gauthambinoy
