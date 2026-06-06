@@ -1,0 +1,33 @@
+# Orion OS — SELinux runtime configuration (M2, P#2.2)
+#
+# Plan section 5.1 / 7.5: SELinux MUST be enforcing on every Orion
+# install. This is the standard /etc/selinux/config file with the
+# enforcing-and-targeted policy combination Fedora ships, made
+# explicit and committed so we cannot regress it through layering.
+#
+# Why we ship this even though Fedora's default is also "enforcing":
+#   - Aurora-dx inherits from atomic, and a downstream layer could
+#     conceivably switch SELINUX=permissive. By declaring our
+#     intended state in our own image we make the intent auditable
+#     and the regression detectable (a future commit changing this
+#     line will show up in code review).
+#   - Lynis (P#2.8) checks this file directly; explicit ownership of
+#     the file is the cleanest way to keep the hardening score above
+#     90.
+#
+# DO NOT change SELINUX= away from "enforcing" without an ADR. Plan
+# section 7.5 names this as a non-negotiable security baseline.
+
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#     enforcing - SELinux security policy is enforced.
+#     permissive - SELinux prints warnings instead of enforcing.
+#     disabled - No SELinux policy is loaded.
+SELINUX=enforcing
+
+# SELINUXTYPE= can take one of these three values:
+#     targeted - Targeted processes are protected,
+#     minimum  - Modification of targeted policy.
+#                Only selected processes are protected.
+#     mls      - Multi Level Security protection.
+SELINUXTYPE=targeted
