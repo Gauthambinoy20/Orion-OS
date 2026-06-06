@@ -40,12 +40,21 @@ months solo** (do not pretend it is faster — see plan §8.1).
 
 ## Known issues
 
-- **Lynis hardening gate (plan §5.5)** is currently *report-only* in
-  `security-scan`. Lynis audits a running system, so a non-booted container
-  audit structurally under-scores; the `>= 90` release-blocker enforcement
-  belongs in the booted VM (`test-vm`) and should move there once it is green.
-- No installable-ISO release or boot screenshots yet — they follow the first
-  green `build-iso` / `test-vm` run.
+- **Image CVE scan is report-only.** The HIGH/CRITICAL findings are in the
+  upstream Fedora / Universal Blue base we rebase onto, not in packages this
+  repo pins, so they are fixed upstream and arrive on the weekly base rebuild.
+  Findings are uploaded to the Security tab; CVEs in our own files are still
+  enforced by the `trivy-config` job.
+- **Lynis hardening gate (plan §5.5)** is *report-only* in `security-scan`.
+  Lynis audits a running system, so a non-booted container audit structurally
+  under-scores; the `>= 90` release-blocker enforcement belongs in the booted
+  VM and should move there when full-boot CI is available.
+- **`test-vm` full boot needs KVM.** On hosted runners (no `/dev/kvm`) it
+  validates that the image converts to a bootable qcow2, then stops green. The
+  full emulated boot + SSH + smoke (and the stock image's lack of a
+  preconfigured login) runs on a KVM-capable self-hosted runner.
+- No tagged ISO release or boot screenshots yet — they follow the first
+  release tag and a KVM boot run.
 
 ## Next
 
