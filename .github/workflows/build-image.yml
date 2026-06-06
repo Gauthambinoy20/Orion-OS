@@ -65,10 +65,6 @@ env:
   # so the namespace is hardcoded lowercase rather than derived from
   # github.repository_owner.
   IMAGE_NAME: gauthambinoy20/orion
-  # True only once the cosign private key is configured as a repo secret.
-  # Until then the sign/verify steps skip cleanly instead of failing the
-  # whole build, so main stays green while the signing key is set up.
-  HAS_SIGNING_KEY: ${{ secrets.COSIGN_PRIVATE_KEY != '' }}
 
 jobs:
   build:
@@ -95,7 +91,7 @@ jobs:
           fi
 
       - name: Set up cosign
-        if: steps.policy.outputs.sign == 'true' && env.HAS_SIGNING_KEY == 'true'
+        if: steps.policy.outputs.sign == 'true'
         uses: sigstore/cosign-installer@v3
         with:
           cosign-release: v2.4.1
@@ -112,9 +108,16 @@ jobs:
       # action handles the rpm-ostree dance inside a privileged builder
       # container; we only need to point it at the recipe (the path is
       # relative to the recipes/ directory).
+      # On push/tags the BlueBuild action signs the pushed image with the
+      # trust-root key itself (it detects cosign.pub in the repo root and
+      # reads COSIGN_PRIVATE_KEY / COSIGN_PASSWORD from the env). On PRs
+      # push=false, so it builds only and never needs the key.
       - name: Build image
         id: build
         uses: blue-build/github-action@v1.11
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         with:
           recipe: recipe.yml
           registry_token: ${{ secrets.GITHUB_TOKEN }}
@@ -124,21 +127,8 @@ jobs:
           # On PRs the action still builds; we override push afterwards.
           push: ${{ steps.policy.outputs.push }}
 
-      - name: Sign image with trust-root key
-        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != '' && env.HAS_SIGNING_KEY == 'true'
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-        run: |
-          # The build action prints the pushed image reference (with
-          # digest) on its 'image' output. Sign by digest so the
-          # signature is bound to immutable bytes, not a moving tag.
-          IMAGE_REF="${{ steps.build.outputs.image }}"
-          echo "Signing ${IMAGE_REF}"
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE_REF}"
-
       - name: Verify signature (sanity check)
-        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != '' && env.HAS_SIGNING_KEY == 'true'
+        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != ''
         run: |
           IMAGE_REF="${{ steps.build.outputs.image }}"
           cosign verify --key cosign.pub "${IMAGE_REF}"
