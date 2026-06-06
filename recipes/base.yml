@@ -16,9 +16,9 @@
 # os-release metadata (e.g. neofetch, gnome-control-center, KInfoCenter).
 type: files
 files:
-  - source: ../files/etc/os-release
+  - source: etc/os-release
     destination: /etc/os-release
-  - source: ../files/etc/orion-release
+  - source: etc/orion-release
     destination: /etc/orion-release
 
 ---

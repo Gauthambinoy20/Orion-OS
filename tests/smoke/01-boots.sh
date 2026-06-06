@@ -63,7 +63,7 @@ if [[ "${UPTIME_S}" -lt 1 ]]; then
 fi
 echo "ok: kernel uptime ${UPTIME_S}s"
 
-# 4. The base CLI tools we promised in image/recipes/base.yml are present.
+# 4. The base CLI tools we promised in recipes/base.yml are present.
 for tool in git just jq rg fd age; do
     if ssh_run "command -v ${tool}" >/dev/null; then
         echo "ok: ${tool} installed"
@@ -82,7 +82,7 @@ else
     exit 1
 fi
 
-# 6. The PIM apps we deliberately removed in image/recipes/kde.yml are
+# 6. The PIM apps we deliberately removed in recipes/kde.yml are
 #    actually gone.
 for removed in kmail akregator korganizer kontact; do
     if ssh_run "command -v ${removed}" >/dev/null 2>&1; then

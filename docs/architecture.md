@@ -54,8 +54,8 @@ How declarative sources become an installed, encrypted system.
 
 ```mermaid
 flowchart LR
-    src1["Recipe YAML<br/>(image/recipe.yml,<br/>recipes/*.yml)"]
-    src2["Baked config + scripts<br/>(image/files/*)"]
+    src1["Recipe YAML<br/>(recipes/recipe.yml,<br/>recipes/*.yml)"]
+    src2["Baked config + scripts<br/>(files/*)"]
     src3["Branding assets<br/>(branding/*)"]
 
     build(["BlueBuild build<br/>(CI: build-image.yml)"])

@@ -83,14 +83,14 @@ layers below it. Defense in depth is mandatory at every boundary.
   install. See `iso/calamares/modules/partition.conf`.
 - **TPM2 unlock bound to PCR 7** (secure-boot policy). Tamper signal
   preserved, kernel updates do not break unlock. See
-  `image/files/usr/libexec/orion/tpm-enroll-luks`.
+  `files/usr/libexec/orion/tpm-enroll-luks`.
 - **Mandatory passphrase fallback.** Slot 0 is never touched. The
   enrollment script verifies slot 0 exists and aborts loudly if it
   does not. Plan §5.1 / §7.5 — non-negotiable.
 
 ### 3.2 Kernel
 
-- **SELinux enforcing + targeted** (`image/files/etc/selinux/config`).
+- **SELinux enforcing + targeted** (`files/etc/selinux/config`).
 - **CIS-aligned sysctls** in `99-orion-hardening.conf`:
   kptr_restrict=2, dmesg_restrict=1, perf_event_paranoid=3,
   yama.ptrace_scope=1, kexec_load_disabled=1,
@@ -105,7 +105,7 @@ layers below it. Defense in depth is mandatory at every boundary.
 
 - **firewalld strict zone** (`orion`): deny inbound; allow only
   dhcpv6-client, mdns, ssh; drop inbound echo-request. See
-  `image/files/etc/firewalld/zones/orion.xml`.
+  `files/etc/firewalld/zones/orion.xml`.
 - **DNS-over-TLS** via systemd-resolved with three diverse upstreams
   (Quad9, Cloudflare, Google). DNSSEC allow-downgrade for
   captive-portal compatibility. See `orion-doh.conf`.

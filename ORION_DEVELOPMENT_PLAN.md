@@ -187,8 +187,8 @@ A release **cannot ship** if any of these fail:
 
 | # | Commit | Files | Status |
 |---|---|---|---|
-| P#1.1 | `build: add BlueBuild recipe skeleton` | `image/recipe.yml`, `image/recipes/base.yml` | ⬜ |
-| P#1.2 | `build: add KDE Plasma module` | `image/recipes/kde.yml` | ⬜ |
+| P#1.1 | `build: add BlueBuild recipe skeleton` | `recipes/recipe.yml`, `recipes/base.yml` | ⬜ |
+| P#1.2 | `build: add KDE Plasma module` | `recipes/kde.yml` | ⬜ |
 | P#1.3 | `build: add Containerfile` | `Containerfile` | ⬜ |
 | P#1.4 | `ci: add image build workflow` | `.github/workflows/build-image.yml` | ⬜ |
 | P#1.5 | `ci: add ISO build workflow` | `.github/workflows/build-iso.yml`, `iso/isogenerator.yml` | ⬜ |
@@ -205,12 +205,12 @@ A release **cannot ship** if any of these fail:
 | # | Commit | Files | Status |
 |---|---|---|---|
 | P#2.1 | `security: enable cosign image signing in CI` | `.github/workflows/sign-release.yml` | ⬜ |
-| P#2.2 | `security: SELinux enforcing config` | `image/files/etc/selinux/config` | ⬜ |
-| P#2.3 | `security: hardened sysctls` | `image/files/etc/sysctl.d/99-orion-hardening.conf` | ⬜ |
-| P#2.4 | `security: firewalld strict default` | `image/files/etc/firewalld/zones/orion.xml` | ⬜ |
-| P#2.5 | `security: DNS-over-HTTPS via systemd-resolved` | `image/files/etc/systemd/resolved.conf.d/orion-doh.conf` | ⬜ |
+| P#2.2 | `security: SELinux enforcing config` | `files/etc/selinux/config` | ⬜ |
+| P#2.3 | `security: hardened sysctls` | `files/etc/sysctl.d/99-orion-hardening.conf` | ⬜ |
+| P#2.4 | `security: firewalld strict default` | `files/etc/firewalld/zones/orion.xml` | ⬜ |
+| P#2.5 | `security: DNS-over-HTTPS via systemd-resolved` | `files/etc/systemd/resolved.conf.d/orion-doh.conf` | ⬜ |
 | P#2.6 | `installer: LUKS2 + TPM2 default in Calamares (passphrase fallback mandatory)` | `iso/calamares/` | ⬜ |
-| P#2.7 | `security: Flatpak restrictive defaults` | `image/files/etc/flatpak/`, override script | ⬜ |
+| P#2.7 | `security: Flatpak restrictive defaults` | `files/etc/flatpak/`, override script | ⬜ |
 | P#2.8 | `ci: add security scan workflow (Trivy + Lynis)` | `.github/workflows/security-scan.yml` | ⬜ |
 | P#2.9 | `docs: security model and threat model` | `docs/security-model.md`, `docs/threat-model.md` | ⬜ |
 
@@ -220,8 +220,8 @@ A release **cannot ship** if any of these fail:
 
 | # | Commit | Files | Status |
 |---|---|---|---|
-| P#3.1 | `perf: layer CachyOS kernel` | `image/recipes/performance.yml` | ⬜ |
-| P#3.2 | `perf: enable zram swap` | `image/files/etc/systemd/zram-generator.conf` | ⬜ |
+| P#3.1 | `perf: layer CachyOS kernel` | `recipes/performance.yml` | ⬜ |
+| P#3.2 | `perf: enable zram swap` | `files/etc/systemd/zram-generator.conf` | ⬜ |
 | P#3.3 | `perf: ananicy-cpp + preload` | recipe additions | ⬜ |
 | P#3.4 | `feat(orion-tune): hardware tier detection` | `crates/orion-tune/` | ⬜ |
 | P#3.5 | `perf: power-profiles-daemon + laptop tuning` | files + systemd unit | ⬜ |
@@ -240,7 +240,7 @@ A release **cannot ship** if any of these fail:
 | P#4.4 | `feat(orion-aid): cloud backends (OpenRouter, Anthropic, OpenAI, Groq)` | provider modules + config | ⬜ |
 | P#4.5 | `feat(orion-aid): smart routing engine (4 modes)` | router | ⬜ |
 | P#4.6 | `feat(orion-aid): D-Bus API + KWallet secret store` | API surface | ⬜ |
-| P#4.7 | `build: bake Ollama + whisper.cpp + Piper into image` | `image/recipes/ai.yml` | ⬜ |
+| P#4.7 | `build: bake Ollama + whisper.cpp + Piper into image` | `recipes/ai.yml` | ⬜ |
 | P#4.8 | `feat(orion-ai-setup): first-boot model installer` | `scripts/orion-ai-setup` | ⬜ |
 | P#4.9 | `feat(orion-cli): orion command (chat, fix, explain)` | `crates/orion-cli/` | ⬜ |
 | P#4.10 | `test: integration tests for AI routing + spend cap` | `tests/integration/` | ⬜ |

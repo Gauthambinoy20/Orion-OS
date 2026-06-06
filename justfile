@@ -59,7 +59,7 @@ lint-secrets:
 # Build the OCI image with the BlueBuild CLI (canonical path).
 build-image:
     @command -v bluebuild >/dev/null || { echo "bluebuild not installed: https://blue-build.org/learn/getting-started/"; exit 1; }
-    bluebuild build --tag {{image_tag}} image/recipe.yml
+    bluebuild build --tag {{image_tag}} recipes/recipe.yml
 
 # Fallback: build via Containerfile. Useful when BlueBuild is broken or
 # uninstalled. Produces ghcr.io/<you>/orion:{{image_tag}}.

@@ -1,7 +1,7 @@
 ---
 # Orion OS — image build & sign workflow (M1, P#1.4)
 #
-# Builds the Orion OCI image from image/recipe.yml (BlueBuild path) and
+# Builds the Orion OCI image from recipes/recipe.yml (BlueBuild path) and
 # pushes it to GHCR. On every main-branch build and every tag, the image
 # is also signed with our cosign key and the signature pushed to the
 # registry.
@@ -26,7 +26,8 @@ on:
   # PRs: build only, no push, no sign. Surfaces recipe breakage early.
   pull_request:
     paths:
-      - "image/**"
+      - "recipes/**"
+      - "files/**"
       - "Containerfile"
       - ".github/workflows/build-image.yml"
 
@@ -34,7 +35,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "image/**"
+      - "recipes/**"
+      - "files/**"
       - "Containerfile"
       - ".github/workflows/build-image.yml"
 
@@ -59,7 +61,14 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/orion
+  # GHCR (OCI) refs must be lowercase; the account login has capitals,
+  # so the namespace is hardcoded lowercase rather than derived from
+  # github.repository_owner.
+  IMAGE_NAME: gauthambinoy20/orion
+  # True only once the cosign private key is configured as a repo secret.
+  # Until then the sign/verify steps skip cleanly instead of failing the
+  # whole build, so main stays green while the signing key is set up.
+  HAS_SIGNING_KEY: ${{ secrets.COSIGN_PRIVATE_KEY != '' }}
 
 jobs:
   build:
@@ -86,7 +95,7 @@ jobs:
           fi
 
       - name: Set up cosign
-        if: steps.policy.outputs.sign == 'true'
+        if: steps.policy.outputs.sign == 'true' && env.HAS_SIGNING_KEY == 'true'
         uses: sigstore/cosign-installer@v3
         with:
           cosign-release: v2.4.1
@@ -99,22 +108,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # BlueBuild reads image/recipe.yml and produces an OCI image. The
+      # BlueBuild reads recipes/recipe.yml and produces an OCI image. The
       # action handles the rpm-ostree dance inside a privileged builder
-      # container; we only need to point it at the recipe.
+      # container; we only need to point it at the recipe (the path is
+      # relative to the recipes/ directory).
       - name: Build image
         id: build
-        uses: blue-build/github-action@v1.8
+        uses: blue-build/github-action@v1.11
         with:
-          recipe: image/recipe.yml
+          recipe: recipe.yml
           registry_token: ${{ secrets.GITHUB_TOKEN }}
+          registry_namespace: gauthambinoy20
           pr_event_number: ${{ github.event.number }}
           maximize_build_space: true
           # On PRs the action still builds; we override push afterwards.
           push: ${{ steps.policy.outputs.push }}
 
       - name: Sign image with trust-root key
-        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != ''
+        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != '' && env.HAS_SIGNING_KEY == 'true'
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
@@ -127,7 +138,7 @@ jobs:
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE_REF}"
 
       - name: Verify signature (sanity check)
-        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != ''
+        if: steps.policy.outputs.sign == 'true' && steps.build.outputs.image != '' && env.HAS_SIGNING_KEY == 'true'
         run: |
           IMAGE_REF="${{ steps.build.outputs.image }}"
           cosign verify --key cosign.pub "${IMAGE_REF}"

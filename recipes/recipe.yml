@@ -6,7 +6,7 @@
 # base image (Universal Blue Aurora, KDE-first, per ORION_DEVELOPMENT_PLAN.md
 # §5.1), and then layers the Orion-specific recipes in order.
 #
-# The split between this file and image/recipes/*.yml is the BlueBuild
+# The split between this file and recipes/*.yml is the BlueBuild
 # convention and lets each concern (base, KDE, security, performance,
 # AI runtime, branding) evolve in its own focused file with its own
 # review history.
@@ -30,14 +30,15 @@ base-image: ghcr.io/ublue-os/aurora-dx
 image-version: "41"
 
 # Modules are applied in order. Each step is a focused recipe file under
-# image/recipes/ so we can review and roll back individual concerns.
+# recipes/ so we can review and roll back individual concerns. from-file
+# paths resolve relative to the recipes/ directory.
 modules:
-  - from-file: recipes/base.yml
-  - from-file: recipes/kde.yml
-  - from-file: recipes/security.yml
+  - from-file: base.yml
+  - from-file: kde.yml
+  - from-file: security.yml
 
 # When a module is added in a later milestone, append it here in the same
 # PR that introduces the recipe file. Order to follow once the modules
 # exist (do not enable until the recipe file is committed):
-#   - from-file: recipes/performance.yml  # P#3.1+
-#   - from-file: recipes/ai.yml           # P#4.7
+#   - from-file: performance.yml  # P#3.1+
+#   - from-file: ai.yml           # P#4.7

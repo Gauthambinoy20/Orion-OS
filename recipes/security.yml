@@ -26,42 +26,42 @@ type: files
 files:
   # P#2.2 — SELinux enforcing+targeted, owned by us so regressions show
   # up in code review and Lynis has a stable file to verify.
-  - source: ../files/etc/selinux/config
+  - source: etc/selinux/config
     destination: /etc/selinux/config
 
   # P#2.3 — kernel hardening sysctls. Numbered 99- so we are last word.
   # Audited against CIS + kernel.org guidance; relaxing requires an ADR.
-  - source: ../files/etc/sysctl.d/99-orion-hardening.conf
+  - source: etc/sysctl.d/99-orion-hardening.conf
     destination: /etc/sysctl.d/99-orion-hardening.conf
 
   # P#2.4 — firewalld "orion" zone: strict default, allows only
   # DHCPv6, mDNS, SSH; drops inbound echo-request. Foundation for
   # the Air-Gapped AI mode rule set (plan §5.4).
-  - source: ../files/etc/firewalld/zones/orion.xml
+  - source: etc/firewalld/zones/orion.xml
     destination: /etc/firewalld/zones/orion.xml
 
   # P#2.5 — DNS-over-HTTPS via systemd-resolved drop-in. Three
   # diverse upstreams (Quad9, Cloudflare, Google), DoT fallback,
   # DNSSEC allow-downgrade for captive-portal compatibility.
-  - source: ../files/etc/systemd/resolved.conf.d/orion-doh.conf
+  - source: etc/systemd/resolved.conf.d/orion-doh.conf
     destination: /etc/systemd/resolved.conf.d/orion-doh.conf
 
   # P#2.6 — TPM2 enrollment helper invoked by Calamares post-install
   # and available on the installed system for re-enrollment. Best
   # effort: never touches the original passphrase slot (plan §7.5).
-  - source: ../files/usr/libexec/orion/tpm-enroll-luks
+  - source: usr/libexec/orion/tpm-enroll-luks
     destination: /usr/libexec/orion/tpm-enroll-luks
 
   # P#2.7 — Flatpak restrictive defaults: revoke broad host
   # filesystem/device/socket grants for every Flatpak. Per-app
   # consent flow via `flatpak override` is preserved (plan §7.5).
-  - source: ../files/etc/flatpak/overrides/global
+  - source: etc/flatpak/overrides/global
     destination: /etc/flatpak/overrides/global
-  - source: ../files/etc/flatpak/remotes.d/flathub-verified.filter
+  - source: etc/flatpak/remotes.d/flathub-verified.filter
     destination: /etc/flatpak/remotes.d/flathub-verified.filter
-  - source: ../files/usr/libexec/orion/flatpak-setup
+  - source: usr/libexec/orion/flatpak-setup
     destination: /usr/libexec/orion/flatpak-setup
-  - source: ../files/etc/systemd/system/orion-flatpak-setup.service
+  - source: etc/systemd/system/orion-flatpak-setup.service
     destination: /etc/systemd/system/orion-flatpak-setup.service
 
 ---

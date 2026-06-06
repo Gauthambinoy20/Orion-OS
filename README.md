@@ -74,10 +74,10 @@ The full table (kernel, AI runtime, vector store, routing) lives in
 ## Repository layout
 
 ```text
-image/
+recipes/
   recipe.yml          # BlueBuild entry point (base-image pin + module order)
-  recipes/            # base.yml · kde.yml · security.yml
-  files/              # config baked into the image (etc/*, usr/libexec/orion/*)
+  base.yml            # per-concern modules: base.yml · kde.yml · security.yml
+files/                # config baked into the image (etc/*, usr/libexec/orion/*)
 iso/
   isogenerator.yml    # OCI image -> installable ISO
   calamares/          # installer config (partitioning, LUKS2 + TPM2 enrollment)

@@ -12,7 +12,7 @@
 #   - Plan §5.6 (installer is Calamares; Anaconda fallback)
 
 # Source image to base the ISO on. Must match the image produced by
-# image/recipe.yml and pushed by .github/workflows/build-image.yml.
+# recipes/recipe.yml and pushed by .github/workflows/build-image.yml.
 # Pinned to the registry path; the tag is supplied by the build job.
 image-name: orion
 image-repo: ghcr.io/gauthambinoy

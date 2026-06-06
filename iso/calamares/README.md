@@ -24,7 +24,7 @@ ships inside the installer ISO.
 
 The actual TPM enrollment script lives in the OS image at
 `/usr/libexec/orion/tpm-enroll-luks` (added under
-`image/files/usr/libexec/orion/`) so it is available both inside
+`files/usr/libexec/orion/`) so it is available both inside
 the live ISO and on the installed system for re-enrollment.
 
 ## Activation in the ISO

@@ -134,9 +134,9 @@ model.
 
 | Path | What lives there |
 |---|---|
-| `image/recipe.yml` | top-level BlueBuild recipe (entry point) |
-| `image/recipes/*.yml` | per-concern recipes (base, KDE, …) |
-| `image/files/etc/` | files copied verbatim into the image |
+| `recipes/recipe.yml` | top-level BlueBuild recipe (entry point) |
+| `recipes/*.yml` | per-concern recipes (base, KDE, …) |
+| `files/etc/` | files copied verbatim into the image |
 | `Containerfile` | fallback build path (must mirror the recipes) |
 | `iso/isogenerator.yml` | ISO build configuration |
 | `.github/workflows/` | CI (lint, build-image, build-iso, smoke) |
