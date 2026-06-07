@@ -56,6 +56,18 @@ while read -r src; do
 done < <(grep -rhoE '^\s*-?\s*source:\s*\S+' recipes/ | awk '{print $NF}')
 [[ "${missing_src}" -eq 0 ]] && ok "all files-module sources exist under files/"
 
+# 4b. the build-iso installer version must match the base major too —
+# a mismatched installer environment (e.g. an old default Fedora) ships
+# a dracut that crashes against this image.
+iso_version="$(awk '/^[[:space:]]*version:/ {print $2; exit}' .github/workflows/build-iso.yml)"
+if [[ -z "${iso_version}" ]]; then
+    fail "build-iso.yml has no installer 'version:' input"
+elif [[ "${iso_version}" != "${base_major}" ]]; then
+    fail "build-iso installer version=${iso_version} != recipe image-version=${base_major}"
+else
+    ok "build-iso installer version matches base major (${base_major})"
+fi
+
 # 4. every from-file target must exist under recipes/.
 missing_mod=0
 while read -r mod; do

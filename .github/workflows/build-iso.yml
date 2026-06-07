@@ -104,6 +104,11 @@ jobs:
           image_name: orion
           image_repo: ${{ env.REGISTRY }}/gauthambinoy20
           image_tag: ${{ steps.tag.outputs.tag }}
+          # Installer environment Fedora major. MUST match the recipe's
+          # image-version (and os-release VERSION_ID): v1.4.0's default is an
+          # older Fedora whose dracut crashes against this image. Bump in
+          # lockstep on every base bump; checked by tests/validate-repo.sh.
+          version: 43
           variant: Kinoite
           iso_name: orion-${{ steps.tag.outputs.tag }}.iso
 
