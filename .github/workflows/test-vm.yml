@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # GitHub-hosted runners do not expose /dev/kvm; the test-vm.sh
       # script auto-detects this and falls back to TCG. Slower (~3x)
