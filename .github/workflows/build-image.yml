@@ -74,7 +74,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Decide whether this run should push and sign. PRs from forks must
       # never be allowed to push — they would not have the secret anyway,
